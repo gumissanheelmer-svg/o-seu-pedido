@@ -8,24 +8,29 @@ import {
   LogOut,
   Menu,
   X,
-  Store
+  Store,
+  Users,
+  XCircle
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useBusiness } from '@/hooks/useBusiness';
+import { useImpersonate } from '@/hooks/useImpersonate';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { path: '/admin/encomendas', icon: ShoppingBag, label: 'Encomendas' },
   { path: '/admin/produtos', icon: Package, label: 'Produtos' },
+  { path: '/admin/clientes', icon: Users, label: 'Clientes' },
   { path: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 
 export function AdminLayout() {
   const { user, isLoading: authLoading, signOut, isAdmin, isSuperAdmin } = useAuth();
   const { business, isLoading: businessLoading } = useBusiness();
+  const { isImpersonating, endImpersonate } = useImpersonate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -41,22 +46,45 @@ export function AdminLayout() {
     return <Navigate to="/entrar" replace />;
   }
 
-  // Super admin should go to super admin dashboard
-  if (isSuperAdmin) {
+  // Super admin should go to super admin dashboard (unless impersonating)
+  if (isSuperAdmin && !isImpersonating) {
     return <Navigate to="/superadmin" replace />;
   }
 
-  // If business is not approved or not active, redirect to awaiting approval
-  if (business && (business.approval_status !== 'approved' || !business.active)) {
+  // If business is not approved or not active, redirect to awaiting approval (unless super admin)
+  if (business && (business.approval_status !== 'approved' || !business.active) && !isSuperAdmin) {
     return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
   const handleSignOut = async () => {
+    if (isImpersonating) {
+      await endImpersonate.mutateAsync();
+      window.location.href = '/superadmin';
+      return;
+    }
     await signOut();
   };
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Impersonate Banner */}
+      {isImpersonating && (
+        <div className="bg-warning text-warning-foreground px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2">
+          <span>Você está visualizando como: {business?.name}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2"
+            onClick={() => {
+              endImpersonate.mutate();
+              window.location.href = '/superadmin';
+            }}
+          >
+            <XCircle className="w-4 h-4 mr-1" />
+            Sair
+          </Button>
+        </div>
+      )}
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">

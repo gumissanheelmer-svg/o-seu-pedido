@@ -14,6 +14,7 @@ import AwaitingApproval from "./pages/AwaitingApproval";
 
 // Public Order Page
 import PublicOrderPage from "./pages/public/PublicOrderPage";
+import PublicCatalogPage from "./pages/public/PublicCatalogPage";
 
 // Admin Pages
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -21,6 +22,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Orders from "./pages/admin/Orders";
 import Products from "./pages/admin/Products";
 import Settings from "./pages/admin/Settings";
+import Customers from "./pages/admin/Customers";
 
 // Super Admin Pages
 import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
@@ -49,11 +51,15 @@ const App = () => (
           {/* Public Order Page */}
           <Route path="/p/:slug" element={<PublicOrderPage />} />
           
+          {/* Public Catalog Page */}
+          <Route path="/b/:slug" element={<PublicCatalogPage />} />
+          
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="encomendas" element={<Orders />} />
             <Route path="produtos" element={<Products />} />
+            <Route path="clientes" element={<Customers />} />
             <Route path="configuracoes" element={<Settings />} />
           </Route>
 

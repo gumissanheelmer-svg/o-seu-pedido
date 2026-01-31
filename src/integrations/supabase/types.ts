@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          business_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           active: boolean
@@ -86,6 +130,123 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          active: boolean
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          business_id: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impersonate_sessions: {
+        Row: {
+          active: boolean
+          ended_at: string | null
+          id: string
+          started_at: string
+          super_admin_id: string
+          target_business_id: string
+        }
+        Insert: {
+          active?: boolean
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          super_admin_id: string
+          target_business_id: string
+        }
+        Update: {
+          active?: boolean
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          super_admin_id?: string
+          target_business_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impersonate_sessions_target_business_id_fkey"
+            columns: ["target_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -94,6 +255,7 @@ export type Database = {
           product_id: string
           product_name: string
           quantity: number
+          selected_options: Json | null
           subtotal: number
           unit_price: number
         }
@@ -104,6 +266,7 @@ export type Database = {
           product_id: string
           product_name: string
           quantity: number
+          selected_options?: Json | null
           subtotal: number
           unit_price: number
         }
@@ -114,6 +277,7 @@ export type Database = {
           product_id?: string
           product_name?: string
           quantity?: number
+          selected_options?: Json | null
           subtotal?: number
           unit_price?: number
         }
@@ -141,6 +305,7 @@ export type Database = {
           client_name: string
           client_phone: string
           created_at: string
+          customer_id: string | null
           delivery_address: string | null
           delivery_date: string
           delivery_time: string | null
@@ -162,6 +327,7 @@ export type Database = {
           client_name: string
           client_phone: string
           created_at?: string
+          customer_id?: string | null
           delivery_address?: string | null
           delivery_date: string
           delivery_time?: string | null
@@ -183,6 +349,7 @@ export type Database = {
           client_name?: string
           client_phone?: string
           created_at?: string
+          customer_id?: string | null
           delivery_address?: string | null
           delivery_date?: string
           delivery_time?: string | null
@@ -206,6 +373,89 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_option_values: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          option_id: string
+          price_adjustment: number | null
+          sort_order: number | null
+          value: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          option_id: string
+          price_adjustment?: number | null
+          sort_order?: number | null
+          value: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          option_id?: string
+          price_adjustment?: number | null
+          sort_order?: number | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_values_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "product_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          product_id: string
+          required: boolean
+          sort_order: number | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          product_id: string
+          required?: boolean
+          sort_order?: number | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          product_id?: string
+          required?: boolean
+          sort_order?: number | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_options_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -213,11 +463,13 @@ export type Database = {
           active: boolean
           business_id: string
           category: string | null
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
           image_url: string | null
           name: string
+          prep_hours: number | null
           price: number
           sort_order: number | null
           updated_at: string
@@ -226,11 +478,13 @@ export type Database = {
           active?: boolean
           business_id: string
           category?: string | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           name: string
+          prep_hours?: number | null
           price: number
           sort_order?: number | null
           updated_at?: string
@@ -239,11 +493,13 @@ export type Database = {
           active?: boolean
           business_id?: string
           category?: string | null
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           name?: string
+          prep_hours?: number | null
           price?: number
           sort_order?: number | null
           updated_at?: string
@@ -254,6 +510,67 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          paid_at: string
+          recorded_by: string | null
+          reference: string | null
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          recorded_by?: string | null
+          reference?: string | null
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          recorded_by?: string | null
+          reference?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -301,6 +618,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      super_admin_emails: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
       }
       used_transaction_codes: {
         Row: {
@@ -379,6 +714,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin_email: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "admin"

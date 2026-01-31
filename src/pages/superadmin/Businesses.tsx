@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
@@ -10,7 +11,8 @@ import {
   Eye,
   MoreHorizontal,
   Search,
-  Filter
+  Filter,
+  UserCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +39,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSuperAdmin, BusinessWithOwner } from '@/hooks/useSuperAdmin';
+import { useImpersonate } from '@/hooks/useImpersonate';
+import { useCreateAuditLog } from '@/hooks/useAuditLogs';
 import { businessTypeLabels, ApprovalStatus } from '@/types/database';
+import { toast } from 'sonner';
 
 const statusConfig: Record<ApprovalStatus, { label: string; color: string; icon: any }> = {
   pending: { label: 'Pendente', color: 'bg-warning text-warning-foreground', icon: Eye },
@@ -47,7 +52,10 @@ const statusConfig: Record<ApprovalStatus, { label: string; color: string; icon:
 };
 
 const Businesses = () => {
+  const navigate = useNavigate();
   const { businesses, isLoading, updateBusinessStatus, metrics } = useSuperAdmin();
+  const { startImpersonate } = useImpersonate();
+  const createAuditLog = useCreateAuditLog();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessWithOwner | null>(null);
@@ -59,28 +67,56 @@ const Businesses = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleApprove = (businessId: string) => {
+  const handleApprove = async (businessId: string) => {
     updateBusinessStatus.mutate({ 
       businessId, 
       approvalStatus: 'approved', 
       active: true 
     });
+    await createAuditLog.mutateAsync({
+      action: 'business.approved',
+      businessId,
+      entityType: 'business',
+      entityId: businessId,
+    });
   };
 
-  const handleReject = (businessId: string) => {
+  const handleReject = async (businessId: string) => {
     updateBusinessStatus.mutate({ 
       businessId, 
       approvalStatus: 'rejected', 
       active: false 
     });
+    await createAuditLog.mutateAsync({
+      action: 'business.rejected',
+      businessId,
+      entityType: 'business',
+      entityId: businessId,
+    });
   };
 
-  const handleBlock = (businessId: string) => {
+  const handleBlock = async (businessId: string) => {
     updateBusinessStatus.mutate({ 
       businessId, 
       approvalStatus: 'blocked', 
       active: false 
     });
+    await createAuditLog.mutateAsync({
+      action: 'business.blocked',
+      businessId,
+      entityType: 'business',
+      entityId: businessId,
+    });
+  };
+
+  const handleImpersonate = async (business: BusinessWithOwner) => {
+    try {
+      await startImpersonate.mutateAsync(business.id);
+      toast.success(`Entrando como ${business.name}...`);
+      navigate('/admin');
+    } catch (error) {
+      toast.error('Erro ao iniciar sessão de impersonate');
+    }
   };
 
   const handleToggleActive = (business: BusinessWithOwner) => {
@@ -265,6 +301,11 @@ const Businesses = () => {
                             )}
                             {business.approval_status === 'approved' && (
                               <>
+                                <DropdownMenuItem onClick={() => handleImpersonate(business)}>
+                                  <UserCog className="w-4 h-4 mr-2" />
+                                  Entrar como Admin
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleToggleActive(business)}>
                                   {business.active ? 'Desativar' : 'Ativar'}
                                 </DropdownMenuItem>

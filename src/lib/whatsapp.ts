@@ -17,9 +17,9 @@ interface WhatsAppMessageParams {
 export interface OrderMessageParams {
   businessName: string;
   clientName: string;
-  orderDescription: string;
-  quantity: number;
-  orderType: string;
+  orderDescription?: string;
+  quantity?: number;
+  orderType?: string;
   deliveryDate: string;
   deliveryTime?: string;
   deliveryAddress?: string;
@@ -27,6 +27,35 @@ export interface OrderMessageParams {
   paymentMethod?: 'mpesa' | 'emola' | null;
   transactionCode?: string;
   amountPaid?: number;
+  // New fields for catalog orders
+  items?: string;
+  total?: number;
+  fulfillmentType?: string;
+}
+
+export function sanitizePhoneNumber(phone: string): string | null {
+  if (!phone) return null;
+  
+  // Remove all non-numeric characters
+  let cleaned = phone.replace(/\D/g, '');
+  
+  // Handle Mozambique numbers
+  // If starts with 0, remove it and add 258
+  if (cleaned.startsWith('0')) {
+    cleaned = '258' + cleaned.slice(1);
+  }
+  
+  // If doesn't start with 258, add it
+  if (!cleaned.startsWith('258')) {
+    cleaned = '258' + cleaned;
+  }
+  
+  // Validate length (258 + 9 digits = 12 total)
+  if (cleaned.length !== 12) {
+    return null;
+  }
+  
+  return cleaned;
 }
 
 export function generateWhatsAppMessage({
@@ -89,31 +118,41 @@ export function generateOrderMessage({
   paymentMethod,
   transactionCode,
   amountPaid,
+  items,
+  total,
+  fulfillmentType,
 }: OrderMessageParams): string {
-  const formattedDate = new Date(deliveryDate).toLocaleDateString('pt-MZ', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-
   let message = `Olá! 👋\n\n`;
   message += `Fiz uma encomenda na *${businessName}* 🎁\n\n`;
   message += `👤 *Cliente:* ${clientName}\n`;
-  message += `📦 *Encomenda:* ${orderDescription}`;
   
-  if (quantity > 1) {
-    message += ` (${quantity}x)`;
+  // If items list is provided (catalog flow)
+  if (items) {
+    message += `\n📋 *Itens:*\n${items}\n`;
+    if (total) {
+      message += `\n💰 *Total:* ${formatCurrency(total)}\n`;
+    }
+  } else if (orderDescription) {
+    // Simple order flow
+    message += `📦 *Encomenda:* ${orderDescription}`;
+    if (quantity && quantity > 1) {
+      message += ` (${quantity}x)`;
+    }
+    message += '\n';
+    
+    if (orderType) {
+      message += `📋 *Tipo:* ${orderType}\n`;
+    }
   }
-  message += '\n';
   
-  if (orderType) {
-    message += `📋 *Tipo:* ${orderType}\n`;
-  }
-  
-  message += `📅 *Data de entrega:* ${formattedDate}\n`;
+  message += `\n📅 *Data de entrega:* ${deliveryDate}\n`;
   
   if (deliveryTime) {
     message += `⏰ *Hora:* ${deliveryTime}\n`;
+  }
+  
+  if (fulfillmentType) {
+    message += `🚚 *Método:* ${fulfillmentType}\n`;
   }
   
   if (deliveryAddress) {

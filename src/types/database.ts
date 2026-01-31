@@ -40,6 +40,8 @@ export interface Product {
   price: number;
   image_url: string | null;
   category: string | null;
+  category_id: string | null;
+  prep_hours: number;
   active: boolean;
   sort_order: number | null;
   created_at: string;

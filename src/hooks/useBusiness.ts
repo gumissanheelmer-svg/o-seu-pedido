@@ -4,34 +4,56 @@ import { Business } from '@/types/database';
 import { useAuth } from './useAuth';
 
 export function useBusiness() {
-  const { user, businessId } = useAuth();
+  const { user, businessId, isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: business, isLoading, error, refetch } = useQuery({
-    queryKey: ['business', businessId],
+  // Check if we have an active impersonate session
+  const { data: impersonateSession } = useQuery({
+    queryKey: ['impersonate-session', user?.id],
     queryFn: async () => {
-      if (!businessId) return null;
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('impersonate_sessions')
+        .select('target_business_id')
+        .eq('super_admin_id', user.id)
+        .eq('active', true)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id && isSuperAdmin,
+  });
+
+  // Use impersonated business ID if available, otherwise use auth business ID
+  const effectiveBusinessId = impersonateSession?.target_business_id || businessId;
+
+  const { data: business, isLoading, error, refetch } = useQuery({
+    queryKey: ['business', effectiveBusinessId],
+    queryFn: async () => {
+      if (!effectiveBusinessId) return null;
       
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
-        .eq('id', businessId)
+        .eq('id', effectiveBusinessId)
         .single();
       
       if (error) throw error;
       return data as Business;
     },
-    enabled: !!businessId,
+    enabled: !!effectiveBusinessId,
   });
 
   const updateBusiness = useMutation({
     mutationFn: async (updates: Partial<Business>) => {
-      if (!businessId) throw new Error('No business ID');
+      if (!effectiveBusinessId) throw new Error('No business ID');
       
       const { data, error } = await supabase
         .from('businesses')
         .update(updates)
-        .eq('id', businessId)
+        .eq('id', effectiveBusinessId)
         .select()
         .single();
       
@@ -39,7 +61,7 @@ export function useBusiness() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['business', businessId] });
+      queryClient.invalidateQueries({ queryKey: ['business', effectiveBusinessId] });
     },
   });
 
