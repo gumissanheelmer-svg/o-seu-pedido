@@ -20,15 +20,20 @@ export type Database = {
           address: string | null
           approval_status: Database["public"]["Enums"]["approval_status"]
           business_type: Database["public"]["Enums"]["business_type"]
+          confirmation_message: string | null
           cover_image_url: string | null
           created_at: string
           description: string | null
+          emola_number: string | null
           id: string
           logo_url: string | null
+          mpesa_number: string | null
           name: string
           owner_id: string
+          payment_required: boolean
           primary_color: string | null
           secondary_color: string | null
+          signal_amount: number | null
           slug: string
           updated_at: string
           whatsapp_number: string
@@ -38,15 +43,20 @@ export type Database = {
           address?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           business_type?: Database["public"]["Enums"]["business_type"]
+          confirmation_message?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          emola_number?: string | null
           id?: string
           logo_url?: string | null
+          mpesa_number?: string | null
           name: string
           owner_id: string
+          payment_required?: boolean
           primary_color?: string | null
           secondary_color?: string | null
+          signal_amount?: number | null
           slug: string
           updated_at?: string
           whatsapp_number: string
@@ -56,15 +66,20 @@ export type Database = {
           address?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           business_type?: Database["public"]["Enums"]["business_type"]
+          confirmation_message?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          emola_number?: string | null
           id?: string
           logo_url?: string | null
+          mpesa_number?: string | null
           name?: string
           owner_id?: string
+          payment_required?: boolean
           primary_color?: string | null
           secondary_color?: string | null
+          signal_amount?: number | null
           slug?: string
           updated_at?: string
           whatsapp_number?: string
@@ -121,6 +136,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          amount_paid: number | null
           business_id: string
           client_name: string
           client_phone: string
@@ -130,11 +146,18 @@ export type Database = {
           delivery_time: string | null
           id: string
           notes: string | null
+          order_description: string | null
+          order_type: string | null
+          payment_confirmed: boolean | null
+          payment_method: string | null
+          quantity: number | null
           status: Database["public"]["Enums"]["order_status"]
           total_amount: number
+          transaction_code: string | null
           updated_at: string
         }
         Insert: {
+          amount_paid?: number | null
           business_id: string
           client_name: string
           client_phone: string
@@ -144,11 +167,18 @@ export type Database = {
           delivery_time?: string | null
           id?: string
           notes?: string | null
+          order_description?: string | null
+          order_type?: string | null
+          payment_confirmed?: boolean | null
+          payment_method?: string | null
+          quantity?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
+          transaction_code?: string | null
           updated_at?: string
         }
         Update: {
+          amount_paid?: number | null
           business_id?: string
           client_name?: string
           client_phone?: string
@@ -158,8 +188,14 @@ export type Database = {
           delivery_time?: string | null
           id?: string
           notes?: string | null
+          order_description?: string | null
+          order_type?: string | null
+          payment_confirmed?: boolean | null
+          payment_method?: string | null
+          quantity?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
+          transaction_code?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -266,6 +302,45 @@ export type Database = {
           },
         ]
       }
+      used_transaction_codes: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          order_id: string | null
+          transaction_code: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          transaction_code: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          transaction_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "used_transaction_codes_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_transaction_codes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           business_id: string | null
@@ -308,7 +383,15 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "admin"
       approval_status: "pending" | "approved" | "rejected" | "blocked"
-      business_type: "lanchonete" | "bolos" | "buques" | "restaurante" | "outro"
+      business_type:
+        | "lanchonete"
+        | "bolos"
+        | "buques"
+        | "restaurante"
+        | "outro"
+        | "presente"
+        | "decoracao"
+        | "personalizado"
       order_status:
         | "pending"
         | "confirmed"
@@ -446,7 +529,16 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "admin"],
       approval_status: ["pending", "approved", "rejected", "blocked"],
-      business_type: ["lanchonete", "bolos", "buques", "restaurante", "outro"],
+      business_type: [
+        "lanchonete",
+        "bolos",
+        "buques",
+        "restaurante",
+        "outro",
+        "presente",
+        "decoracao",
+        "personalizado",
+      ],
       order_status: [
         "pending",
         "confirmed",

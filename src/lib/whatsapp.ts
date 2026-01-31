@@ -1,4 +1,5 @@
 import { CartItem, Business } from '@/types/database';
+import { formatPaymentMethod } from './payment-parser';
 
 interface WhatsAppMessageParams {
   business: Business;
@@ -10,6 +11,22 @@ interface WhatsAppMessageParams {
   items: CartItem[];
   notes?: string;
   totalAmount: number;
+}
+
+// New interface for simplified order flow
+export interface OrderMessageParams {
+  businessName: string;
+  clientName: string;
+  orderDescription: string;
+  quantity: number;
+  orderType: string;
+  deliveryDate: string;
+  deliveryTime?: string;
+  deliveryAddress?: string;
+  notes?: string;
+  paymentMethod?: 'mpesa' | 'emola' | null;
+  transactionCode?: string;
+  amountPaid?: number;
 }
 
 export function generateWhatsAppMessage({
@@ -59,6 +76,70 @@ export function generateWhatsAppMessage({
   return message;
 }
 
+export function generateOrderMessage({
+  businessName,
+  clientName,
+  orderDescription,
+  quantity,
+  orderType,
+  deliveryDate,
+  deliveryTime,
+  deliveryAddress,
+  notes,
+  paymentMethod,
+  transactionCode,
+  amountPaid,
+}: OrderMessageParams): string {
+  const formattedDate = new Date(deliveryDate).toLocaleDateString('pt-MZ', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
+  let message = `Olá! 👋\n\n`;
+  message += `Fiz uma encomenda na *${businessName}* 🎁\n\n`;
+  message += `👤 *Cliente:* ${clientName}\n`;
+  message += `📦 *Encomenda:* ${orderDescription}`;
+  
+  if (quantity > 1) {
+    message += ` (${quantity}x)`;
+  }
+  message += '\n';
+  
+  if (orderType) {
+    message += `📋 *Tipo:* ${orderType}\n`;
+  }
+  
+  message += `📅 *Data de entrega:* ${formattedDate}\n`;
+  
+  if (deliveryTime) {
+    message += `⏰ *Hora:* ${deliveryTime}\n`;
+  }
+  
+  if (deliveryAddress) {
+    message += `📍 *Local:* ${deliveryAddress}\n`;
+  }
+  
+  // Only include payment info if there was a payment
+  if (paymentMethod && transactionCode) {
+    message += '\n';
+    message += `💳 *Método:* ${formatPaymentMethod(paymentMethod)}\n`;
+    message += `🔐 *Código da transação:* ${transactionCode}\n`;
+    
+    if (amountPaid && amountPaid > 0) {
+      message += `💰 *Valor pago:* ${formatCurrency(amountPaid)}\n`;
+    }
+  }
+  
+  if (notes) {
+    message += `\n📝 *Observações:* ${notes}\n`;
+  }
+  
+  message += '\nAguardo confirmação 🙏';
+
+  return message;
+}
+
 export function generateWhatsAppLink(phoneNumber: string, message: string): string {
   // Remove non-numeric characters from phone
   const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -78,4 +159,20 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // Format as +258 84 XXX XXXX
+  if (cleaned.startsWith('258') && cleaned.length === 12) {
+    return `+${cleaned.slice(0, 3)} ${cleaned.slice(3, 5)} ${cleaned.slice(5, 8)} ${cleaned.slice(8)}`;
+  }
+  
+  // Format as 84 XXX XXXX
+  if (cleaned.length === 9) {
+    return `${cleaned.slice(0, 2)} ${cleaned.slice(2, 5)} ${cleaned.slice(5)}`;
+  }
+  
+  return phone;
 }
