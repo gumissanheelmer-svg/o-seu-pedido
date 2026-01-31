@@ -103,7 +103,7 @@ const Register = () => {
         description: 'Bem-vindo ao Encomendas. Seu negócio está pendente de aprovação.',
       });
       
-      navigate('/admin');
+      navigate('/aguardando-aprovacao');
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({

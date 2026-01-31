@@ -7,7 +7,7 @@ export function useBusiness() {
   const { user, businessId } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: business, isLoading, error } = useQuery({
+  const { data: business, isLoading, error, refetch } = useQuery({
     queryKey: ['business', businessId],
     queryFn: async () => {
       if (!businessId) return null;
@@ -48,6 +48,7 @@ export function useBusiness() {
     isLoading,
     error,
     updateBusiness,
+    refetch,
   };
 }
 
