@@ -66,19 +66,8 @@ export function useSuperAdmin() {
     },
   });
 
-  // Fetch all orders for metrics
-  const { data: allOrders, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ['superadmin-orders'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, created_at, total_amount, status, payment_confirmed')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Count paid subscriptions
+  const paidSubscriptionsCount = subscriptions?.filter(s => s.status === 'active').length || 0;
 
   // Update business approval status
   const updateBusinessStatus = useMutation({
@@ -197,18 +186,16 @@ export function useSuperAdmin() {
     pendingApproval: businesses?.filter(b => b.approval_status === 'pending').length || 0,
     approvedActive: businesses?.filter(b => b.approval_status === 'approved' && b.active).length || 0,
     blocked: businesses?.filter(b => b.approval_status === 'blocked').length || 0,
-    totalOrders: allOrders?.length || 0,
-    totalRevenue: allOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0,
     pendingSubscriptions: subscriptions?.filter(s => s.status === 'pending').length || 0,
     overdueSubscriptions: subscriptions?.filter(s => s.status === 'overdue').length || 0,
+    paidSubscriptions: paidSubscriptionsCount,
   };
 
   return {
     businesses,
     subscriptions,
-    allOrders,
     metrics,
-    isLoading: isLoadingBusinesses || isLoadingSubscriptions || isLoadingOrders,
+    isLoading: isLoadingBusinesses || isLoadingSubscriptions,
     updateBusinessStatus,
     updateSubscription,
     createSubscription,
