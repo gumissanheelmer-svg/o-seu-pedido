@@ -24,7 +24,7 @@ const navItems = [
 ];
 
 export function AdminLayout() {
-  const { user, isLoading: authLoading, signOut, isAdmin } = useAuth();
+  const { user, isLoading: authLoading, signOut, isAdmin, isSuperAdmin } = useAuth();
   const { business, isLoading: businessLoading } = useBusiness();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,6 +39,16 @@ export function AdminLayout() {
 
   if (!user) {
     return <Navigate to="/entrar" replace />;
+  }
+
+  // Super admin should go to super admin dashboard
+  if (isSuperAdmin) {
+    return <Navigate to="/superadmin" replace />;
+  }
+
+  // If business is not approved or not active, redirect to awaiting approval
+  if (business && (business.approval_status !== 'approved' || !business.active)) {
+    return <Navigate to="/aguardando-aprovacao" replace />;
   }
 
   const handleSignOut = async () => {

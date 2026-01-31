@@ -10,6 +10,7 @@ import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
+import AwaitingApproval from "./pages/AwaitingApproval";
 
 // Public Order Page
 import PublicOrderPage from "./pages/public/PublicOrderPage";
@@ -20,6 +21,12 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Orders from "./pages/admin/Orders";
 import Products from "./pages/admin/Products";
 import Settings from "./pages/admin/Settings";
+
+// Super Admin Pages
+import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
+import Businesses from "./pages/superadmin/Businesses";
+import Subscriptions from "./pages/superadmin/Subscriptions";
+import Metrics from "./pages/superadmin/Metrics";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +44,7 @@ const App = () => (
           <Route path="/sobre" element={<About />} />
           <Route path="/precos" element={<Pricing />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/aguardando-aprovacao" element={<AwaitingApproval />} />
           
           {/* Public Order Page */}
           <Route path="/p/:slug" element={<PublicOrderPage />} />
@@ -47,6 +55,13 @@ const App = () => (
             <Route path="encomendas" element={<Orders />} />
             <Route path="produtos" element={<Products />} />
             <Route path="configuracoes" element={<Settings />} />
+          </Route>
+
+          {/* Super Admin Routes */}
+          <Route path="/superadmin" element={<SuperAdminLayout />}>
+            <Route index element={<Businesses />} />
+            <Route path="mensalidades" element={<Subscriptions />} />
+            <Route path="metricas" element={<Metrics />} />
           </Route>
           
           {/* Catch-all */}

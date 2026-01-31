@@ -39,13 +39,14 @@ const Login = () => {
         description: 'Email ou senha incorretos.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Bem-vindo de volta!',
-        description: 'Login realizado com sucesso.',
-      });
-      navigate('/admin');
+      return;
     }
+    
+    toast({
+      title: 'Bem-vindo de volta!',
+      description: 'Login realizado com sucesso.',
+    });
+    navigate('/admin');
   };
 
   return (
