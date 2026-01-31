@@ -33,6 +33,7 @@ export function useAuth() {
         ...prev,
         role: data.role as AppRole,
         businessId: data.business_id,
+        isLoading: false,
       }));
       return;
     }
@@ -52,46 +53,59 @@ export function useAuth() {
           ...prev,
           role: 'super_admin' as AppRole,
           businessId: null,
+          isLoading: false,
         }));
+        return;
       }
     }
+    
+    // No role found, mark as done loading
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+    }));
   }, []);
 
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Set user/session immediately but keep loading true until role is fetched
         setState((prev) => ({
           ...prev,
           user: session?.user ?? null,
           session,
-          isLoading: false,
         }));
 
         if (session?.user) {
-          // Defer role fetch to avoid blocking
-          setTimeout(() => fetchUserRole(session.user.id, session.user.email), 0);
+          // Fetch role - this will set isLoading to false when done
+          await fetchUserRole(session.user.id, session.user.email);
         } else {
           setState((prev) => ({
             ...prev,
             role: null,
             businessId: null,
+            isLoading: false,
           }));
         }
       }
     );
 
     // Then get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setState((prev) => ({
         ...prev,
         user: session?.user ?? null,
         session,
-        isLoading: false,
       }));
 
       if (session?.user) {
-        fetchUserRole(session.user.id, session.user.email);
+        await fetchUserRole(session.user.id, session.user.email);
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+        }));
       }
     });
 
