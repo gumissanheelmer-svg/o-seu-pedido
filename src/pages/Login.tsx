@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -31,9 +32,9 @@ const Login = () => {
 
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
 
     if (error) {
+      setIsLoading(false);
       toast({
         title: 'Erro ao entrar',
         description: 'Email ou senha incorretos.',
@@ -42,11 +43,30 @@ const Login = () => {
       return;
     }
     
-    toast({
-      title: 'Bem-vindo de volta!',
-      description: 'Login realizado com sucesso.',
-    });
-    navigate('/admin');
+    // Check if user is super admin to redirect appropriately
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setIsLoading(false);
+      toast({
+        title: 'Bem-vindo de volta!',
+        description: 'Login realizado com sucesso.',
+      });
+      
+      if (roleData?.role === 'super_admin') {
+        navigate('/superadmin');
+      } else {
+        navigate('/admin');
+      }
+    } else {
+      setIsLoading(false);
+      navigate('/admin');
+    }
   };
 
   return (
