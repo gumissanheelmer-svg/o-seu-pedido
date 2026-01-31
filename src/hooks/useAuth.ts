@@ -20,12 +20,13 @@ export function useAuth() {
     businessId: null,
   });
 
-  const fetchUserRole = useCallback(async (userId: string) => {
+  const fetchUserRole = useCallback(async (userId: string, userEmail?: string) => {
+    // First check if user already has a role
     const { data } = await supabase
       .from('user_roles')
       .select('role, business_id')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setState((prev) => ({
@@ -33,6 +34,26 @@ export function useAuth() {
         role: data.role as AppRole,
         businessId: data.business_id,
       }));
+      return;
+    }
+
+    // If no role exists and user email is in super admin allowlist, assign super_admin role
+    if (userEmail) {
+      const { data: isSuperAdminEmail } = await supabase
+        .rpc('is_super_admin_email', { _email: userEmail });
+
+      if (isSuperAdminEmail) {
+        // Create super_admin role for this user
+        await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role: 'super_admin', business_id: null });
+
+        setState((prev) => ({
+          ...prev,
+          role: 'super_admin' as AppRole,
+          businessId: null,
+        }));
+      }
     }
   }, []);
 
@@ -49,7 +70,7 @@ export function useAuth() {
 
         if (session?.user) {
           // Defer role fetch to avoid blocking
-          setTimeout(() => fetchUserRole(session.user.id), 0);
+          setTimeout(() => fetchUserRole(session.user.id, session.user.email), 0);
         } else {
           setState((prev) => ({
             ...prev,
@@ -70,7 +91,7 @@ export function useAuth() {
       }));
 
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session.user.id, session.user.email);
       }
     });
 
