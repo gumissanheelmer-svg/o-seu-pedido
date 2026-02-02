@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Store, ShoppingCart, ArrowLeft, X, Plus, Minus, Trash2 } from 'lucide-react';
@@ -15,6 +15,16 @@ import { CartProvider, useCartContext, SelectedOption } from '@/contexts/CartCon
 import { ProductDetailModal } from '@/components/public/ProductDetailModal';
 import { CheckoutFlow } from '@/components/public/CheckoutFlow';
 
+// Helper to get initials from business name
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map(word => word[0])
+    .join('')
+    .toUpperCase();
+}
+
 function CatalogContent() {
   const { slug } = useParams<{ slug: string }>();
   const { data: business, isLoading: businessLoading, error: businessError } = usePublicBusiness(slug || '');
@@ -27,6 +37,15 @@ function CatalogContent() {
   const [cartOpen, setCartOpen] = useState(false);
   
   const { items, removeItem, updateQuantity, totalItems, totalAmount, clearCart } = useCartContext();
+
+  // Dynamic styles based on business primary color
+  const dynamicStyles = useMemo(() => {
+    const primaryColor = business?.primary_color || '#C9A24D';
+    return {
+      '--business-primary': primaryColor,
+      '--business-primary-hover': primaryColor,
+    } as React.CSSProperties;
+  }, [business?.primary_color]);
 
   if (businessLoading || productsLoading) {
     return (
@@ -82,27 +101,85 @@ function CatalogContent() {
   const uncategorizedProducts = products?.filter(p => !p.category_id) || [];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <div className="min-h-screen bg-background" style={dynamicStyles}>
+      {/* Hero Section with Cover */}
+      <div className="relative">
+        {/* Cover Image */}
+        {business.cover_image_url ? (
+          <div className="h-48 sm:h-64 w-full">
+            <img
+              src={business.cover_image_url}
+              alt={business.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+          </div>
+        ) : (
+          <div 
+            className="h-32 sm:h-40 w-full"
+            style={{ 
+              background: `linear-gradient(135deg, ${business.primary_color || '#C9A24D'}20 0%, ${business.primary_color || '#C9A24D'}05 100%)` 
+            }}
+          />
+        )}
+        
+        {/* Business Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className="container max-w-4xl mx-auto px-4 pb-4">
+            <div className="flex items-end gap-4">
+              {/* Logo */}
+              {business.logo_url ? (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-4 border-background shadow-lg shrink-0 -mb-2">
+                  <img
+                    src={business.logo_url}
+                    alt={business.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-background shadow-lg flex items-center justify-center text-white text-2xl font-bold shrink-0 -mb-2"
+                  style={{ backgroundColor: business.primary_color || '#C9A24D' }}
+                >
+                  {getInitials(business.name)}
+                </div>
+              )}
+              
+              <div className="flex-1 min-w-0 pb-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+                  {business.name}
+                </h1>
+                {business.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                    {business.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Header with Cart */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {business.logo_url ? (
                 <img
                   src={business.logo_url}
                   alt={business.name}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-8 h-8 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Store className="w-5 h-5 text-primary" />
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: business.primary_color || '#C9A24D' }}
+                >
+                  {getInitials(business.name)}
                 </div>
               )}
-              <div>
-                <h1 className="font-bold text-foreground">{business.name}</h1>
-                <p className="text-xs text-muted-foreground">Catálogo de Produtos</p>
-              </div>
+              <span className="font-semibold text-foreground text-sm">{business.name}</span>
             </div>
 
             {/* Cart Button */}
@@ -214,33 +291,16 @@ function CatalogContent() {
         </div>
       </header>
 
-      {/* Cover Image */}
-      {business.cover_image_url && (
-        <div className="relative h-40 bg-muted">
-          <img
-            src={business.cover_image_url}
-            alt={business.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-        </div>
-      )}
-
-      {/* Description */}
-      {business.description && (
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <p className="text-muted-foreground text-sm">{business.description}</p>
-        </div>
-      )}
 
       {/* Category Filter */}
       {categories && categories.length > 0 && (
-        <div className="container max-w-4xl mx-auto px-4 pb-4">
+        <div className="container max-w-4xl mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
               variant={selectedCategory === null ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(null)}
+              style={selectedCategory === null ? { backgroundColor: business.primary_color || '#C9A24D' } : {}}
             >
               Todos
             </Button>
@@ -251,6 +311,7 @@ function CatalogContent() {
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
                 className="whitespace-nowrap"
+                style={selectedCategory === cat.id ? { backgroundColor: business.primary_color || '#C9A24D' } : {}}
               >
                 {cat.name}
               </Button>
@@ -319,12 +380,13 @@ function CatalogContent() {
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto"
+          className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto z-40"
         >
           <Button
-            className="w-full h-14 text-base"
+            className="w-full h-14 text-base text-white shadow-lg"
             size="lg"
             onClick={() => setShowCheckout(true)}
+            style={{ backgroundColor: business.primary_color || '#C9A24D' }}
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
             Ver Carrinho ({totalItems}) • {formatCurrency(totalAmount)}

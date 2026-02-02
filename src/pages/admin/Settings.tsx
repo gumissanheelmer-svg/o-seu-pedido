@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Store, Phone, CreditCard, MessageSquare, Save, Loader2 } from 'lucide-react';
+import { Store, Phone, CreditCard, MessageSquare, Save, Loader2, Palette } from 'lucide-react';
 import { useBusiness } from '@/hooks/useBusiness';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { businessTypeLabels, BusinessType } from '@/types/database';
+import { IdentitySettings } from '@/components/admin/settings/IdentitySettings';
 import { toast } from 'sonner';
 
 export default function Settings() {
@@ -23,7 +24,6 @@ export default function Settings() {
   const [description, setDescription] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
 
   // Payment settings
   const [paymentRequired, setPaymentRequired] = useState(false);
@@ -40,7 +40,6 @@ export default function Settings() {
       setDescription(business.description || '');
       setWhatsappNumber(business.whatsapp_number || '');
       setAddress(business.address || '');
-      setLogoUrl(business.logo_url || '');
       setPaymentRequired(business.payment_required || false);
       setMpesaNumber(business.mpesa_number || '');
       setEmolaNumber(business.emola_number || '');
@@ -58,7 +57,6 @@ export default function Settings() {
         description: description || null,
         whatsapp_number: whatsappNumber,
         address: address || null,
-        logo_url: logoUrl || null,
       });
       toast.success('Configurações salvas!');
     } catch (error) {
@@ -86,6 +84,18 @@ export default function Settings() {
     }
   };
 
+  const handleIdentityUpdate = async (updates: Record<string, unknown>) => {
+    setIsSaving(true);
+    try {
+      await updateBusiness.mutateAsync(updates as any);
+    } catch (error) {
+      toast.error('Erro ao salvar');
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -102,8 +112,12 @@ export default function Settings() {
         <p className="text-muted-foreground mt-1">Personalize seu negócio</p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="identity" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="identity" className="flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            Identidade
+          </TabsTrigger>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Store className="w-4 h-4" />
             Geral
@@ -113,6 +127,15 @@ export default function Settings() {
             Pagamento
           </TabsTrigger>
         </TabsList>
+
+        {/* Identity Settings */}
+        <TabsContent value="identity">
+          <IdentitySettings 
+            business={business} 
+            onUpdate={handleIdentityUpdate}
+            isSaving={isSaving}
+          />
+        </TabsContent>
 
         {/* General Settings */}
         <TabsContent value="general">
@@ -190,17 +213,6 @@ export default function Settings() {
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Localização do seu negócio"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="logoUrl">URL do Logotipo</Label>
-                  <Input
-                    id="logoUrl"
-                    type="url"
-                    value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    placeholder="https://..."
                   />
                 </div>
 
