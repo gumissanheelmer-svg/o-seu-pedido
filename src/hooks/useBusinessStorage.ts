@@ -47,12 +47,7 @@ export function useBusinessStorage() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${businessId}/logo.${fileExt}`;
       
-      // Delete existing logo if exists
-      await supabase.storage
-        .from('business_logos')
-        .remove([`${businessId}/logo.png`, `${businessId}/logo.jpg`, `${businessId}/logo.jpeg`, `${businessId}/logo.webp`]);
-      
-      // Upload new logo
+      // Upload directly with upsert (skip delete for speed)
       const { error: uploadError } = await supabase.storage
         .from('business_logos')
         .upload(fileName, file, { 
@@ -62,12 +57,10 @@ export function useBusinessStorage() {
       
       if (uploadError) throw uploadError;
       
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('business_logos')
         .getPublicUrl(fileName);
       
-      // Add cache buster to force refresh
       return `${publicUrl}?t=${Date.now()}`;
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer upload');
@@ -92,12 +85,7 @@ export function useBusinessStorage() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${businessId}/cover.${fileExt}`;
       
-      // Delete existing cover if exists
-      await supabase.storage
-        .from('business_covers')
-        .remove([`${businessId}/cover.png`, `${businessId}/cover.jpg`, `${businessId}/cover.jpeg`, `${businessId}/cover.webp`]);
-      
-      // Upload new cover
+      // Upload directly with upsert (skip delete for speed)
       const { error: uploadError } = await supabase.storage
         .from('business_covers')
         .upload(fileName, file, { 
@@ -107,12 +95,10 @@ export function useBusinessStorage() {
       
       if (uploadError) throw uploadError;
       
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('business_covers')
         .getPublicUrl(fileName);
       
-      // Add cache buster to force refresh
       return `${publicUrl}?t=${Date.now()}`;
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer upload');
