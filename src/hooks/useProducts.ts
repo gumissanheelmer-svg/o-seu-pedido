@@ -24,11 +24,15 @@ export interface ProductOptionValue {
   created_at: string;
 }
 
-export interface ProductWithOptions extends Omit<Product, 'category' | 'category_id' | 'prep_hours'> {
+export interface ProductWithOptions extends Omit<Product, 'category' | 'category_id' | 'prep_hours' | 'image_urls' | 'video_urls' | 'main_image_url'> {
   category_id?: string | null;
   prep_hours?: number;
   options?: ProductOption[];
   category?: { id: string; name: string } | null;
+  // Media fields - made optional for backward compatibility
+  image_urls?: string[] | null;
+  video_urls?: string[] | null;
+  main_image_url?: string | null;
 }
 
 export function useProducts() {

@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, Package, MoreVertical, Image } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, MoreVertical, Image, Play } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ProductFormDialog } from '@/components/admin/products/ProductFormDialog';
 import { Product } from '@/types/database';
 import { formatCurrency } from '@/lib/whatsapp';
 import { toast } from 'sonner';
@@ -21,18 +18,11 @@ interface ProductFormData {
   description: string;
   price: string;
   category: string;
-  image_url: string;
   active: boolean;
+  image_urls: string[];
+  video_urls: string[];
+  main_image_url: string | null;
 }
-
-const initialFormData: ProductFormData = {
-  name: '',
-  description: '',
-  price: '',
-  category: '',
-  image_url: '',
-  active: true,
-};
 
 export default function Products() {
   const { businessId } = useAuth();
@@ -40,7 +30,7 @@ export default function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<ProductFormData>(initialFormData);
+  const [saving, setSaving] = useState(false);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', businessId],
@@ -59,16 +49,24 @@ export default function Products() {
 
   const createProduct = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const { error } = await supabase.from('products').insert({
-        business_id: businessId,
-        name: data.name,
-        description: data.description || null,
-        price: parseFloat(data.price) || 0,
-        category: data.category || null,
-        image_url: data.image_url || null,
-        active: data.active,
-      });
+      const { data: newProduct, error } = await supabase
+        .from('products')
+        .insert({
+          business_id: businessId,
+          name: data.name,
+          description: data.description || null,
+          price: parseFloat(data.price) || 0,
+          category: data.category || null,
+          image_url: data.main_image_url || data.image_urls[0] || null,
+          image_urls: data.image_urls,
+          video_urls: data.video_urls,
+          main_image_url: data.main_image_url,
+          active: data.active,
+        })
+        .select()
+        .single();
       if (error) throw error;
+      return newProduct;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products', businessId] });
@@ -89,7 +87,10 @@ export default function Products() {
           description: data.description || null,
           price: parseFloat(data.price) || 0,
           category: data.category || null,
-          image_url: data.image_url || null,
+          image_url: data.main_image_url || data.image_urls[0] || null,
+          image_urls: data.image_urls,
+          video_urls: data.video_urls,
+          main_image_url: data.main_image_url,
           active: data.active,
         })
         .eq('id', id);
@@ -122,28 +123,26 @@ export default function Products() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
-    setFormData(initialFormData);
+    setSaving(false);
   };
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description || '',
-      price: product.price.toString(),
-      category: product.category || '',
-      image_url: product.image_url || '',
-      active: product.active,
-    });
     setIsDialogOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingProduct) {
-      updateProduct.mutate({ id: editingProduct.id, data: formData });
-    } else {
-      createProduct.mutate(formData);
+  const handleSave = async (data: ProductFormData, productId?: string): Promise<string | null> => {
+    setSaving(true);
+    try {
+      if (productId) {
+        await updateProduct.mutateAsync({ id: productId, data });
+      } else {
+        await createProduct.mutateAsync(data);
+      }
+      return null;
+    } catch (error) {
+      setSaving(false);
+      return 'Erro ao salvar produto';
     }
   };
 
@@ -151,6 +150,26 @@ export default function Products() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
+
+  // Get display image for product card
+  const getProductDisplayImage = (product: Product): string | null => {
+    return product.main_image_url || product.image_url || 
+      (Array.isArray(product.image_urls) && product.image_urls.length > 0 
+        ? product.image_urls[0] 
+        : null);
+  };
+
+  // Check if product has video
+  const hasVideo = (product: Product): boolean => {
+    return Array.isArray(product.video_urls) && product.video_urls.length > 0;
+  };
+
+  // Get media count for display
+  const getMediaCount = (product: Product): { images: number; videos: number } => {
+    const images = Array.isArray(product.image_urls) ? product.image_urls.length : 0;
+    const videos = Array.isArray(product.video_urls) ? product.video_urls.length : 0;
+    return { images, videos };
+  };
 
   return (
     <div className="space-y-6">
@@ -160,91 +179,10 @@ export default function Products() {
           <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
           <p className="text-muted-foreground mt-1">Gerencie seu catálogo de produtos</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setFormData(initialFormData)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Produto
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome do produto"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição do produto"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Preço (MZN) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="Ex: Bolos"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="image_url">URL da Imagem</Label>
-                <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="active">Produto ativo</Label>
-                <Switch
-                  id="active"
-                  checked={formData.active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                />
-              </div>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" className="flex-1" onClick={handleCloseDialog}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="flex-1">
-                  {editingProduct ? 'Salvar' : 'Criar'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Produto
+        </Button>
       </div>
 
       {/* Search */}
@@ -277,70 +215,107 @@ export default function Products() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProducts.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className={!product.active ? 'opacity-60' : ''}>
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Image className="w-8 h-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
-                          {product.category && (
-                            <span className="text-xs text-muted-foreground">{product.category}</span>
-                          )}
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(product)}>
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => deleteProduct.mutate(product.id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Remover
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+          {filteredProducts.map((product, index) => {
+            const displayImage = getProductDisplayImage(product);
+            const mediaCount = getMediaCount(product);
+            
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card className={!product.active ? 'opacity-60' : ''}>
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center shrink-0 overflow-hidden relative">
+                        {displayImage ? (
+                          <>
+                            <img
+                              src={displayImage}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Media count badge */}
+                            {(mediaCount.images > 1 || mediaCount.videos > 0) && (
+                              <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                                {mediaCount.images > 0 && (
+                                  <span className="flex items-center gap-0.5">
+                                    <Image className="w-3 h-3" />
+                                    {mediaCount.images}
+                                  </span>
+                                )}
+                                {mediaCount.videos > 0 && (
+                                  <span className="flex items-center gap-0.5">
+                                    <Play className="w-3 h-3" />
+                                    {mediaCount.videos}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <Image className="w-8 h-8 text-muted-foreground" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {product.description || 'Sem descrição'}
-                      </p>
-                      <p className="text-lg font-bold text-primary mt-2">
-                        {formatCurrency(product.price)}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
+                            {product.category && (
+                              <span className="text-xs text-muted-foreground">{product.category}</span>
+                            )}
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="shrink-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(product)}>
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => deleteProduct.mutate(product.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Remover
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                          {product.description || 'Sem descrição'}
+                        </p>
+                        <p className="text-lg font-bold text-primary mt-2">
+                          {formatCurrency(product.price)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
+
+      {/* Product Form Dialog */}
+      <ProductFormDialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setIsDialogOpen(true);
+        }}
+        product={editingProduct}
+        businessId={businessId || ''}
+        onSave={handleSave}
+        saving={saving}
+      />
     </div>
   );
 }

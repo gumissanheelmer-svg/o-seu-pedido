@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Store, ShoppingCart, ArrowLeft, X, Plus, Minus, Trash2 } from 'lucide-react';
+import { Loader2, Store, ShoppingCart, ArrowLeft, X, Plus, Minus, Trash2, Play, Image } from 'lucide-react';
 import { usePublicBusiness } from '@/hooks/useBusiness';
 import { usePublicProducts, ProductWithOptions } from '@/hooks/useProducts';
 import { usePublicCategories } from '@/hooks/useCategories';
@@ -14,6 +14,27 @@ import { formatCurrency } from '@/lib/whatsapp';
 import { CartProvider, useCartContext, SelectedOption } from '@/contexts/CartContext';
 import { ProductDetailModal } from '@/components/public/ProductDetailModal';
 import { CheckoutFlow } from '@/components/public/CheckoutFlow';
+
+// Helper to get display media for product
+function getProductDisplayMedia(product: ProductWithOptions): { url: string; type: 'image' | 'video' } | null {
+  const mainImage = product.main_image_url || product.image_url;
+  if (mainImage) return { url: mainImage, type: 'image' };
+  
+  const imageUrls = Array.isArray(product.image_urls) ? product.image_urls : [];
+  if (imageUrls.length > 0) return { url: imageUrls[0], type: 'image' };
+  
+  const videoUrls = Array.isArray(product.video_urls) ? product.video_urls : [];
+  if (videoUrls.length > 0) return { url: videoUrls[0], type: 'video' };
+  
+  return null;
+}
+
+// Get media count
+function getMediaCount(product: ProductWithOptions): number {
+  const images = Array.isArray(product.image_urls) ? product.image_urls.length : (product.image_url ? 1 : 0);
+  const videos = Array.isArray(product.video_urls) ? product.video_urls.length : 0;
+  return images + videos;
+}
 
 // Helper to get initials from business name
 function getInitials(name: string): string {
@@ -104,8 +125,20 @@ function CatalogContent() {
     <div className="min-h-screen bg-background" style={dynamicStyles}>
       {/* Hero Section with Cover */}
       <div className="relative">
-        {/* Cover Image */}
-        {business.cover_image_url ? (
+        {/* Cover Video or Image */}
+        {(business as any).cover_video_url ? (
+          <div className="h-48 sm:h-64 w-full relative overflow-hidden">
+            <video
+              src={(business as any).cover_video_url}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+          </div>
+        ) : business.cover_image_url ? (
           <div className="h-48 sm:h-64 w-full">
             <img
               src={business.cover_image_url}
@@ -412,6 +445,9 @@ function CatalogContent() {
 }
 
 function ProductCard({ product, onClick }: { product: ProductWithOptions; onClick: () => void }) {
+  const displayMedia = getProductDisplayMedia(product);
+  const mediaCount = getMediaCount(product);
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -421,12 +457,33 @@ function ProductCard({ product, onClick }: { product: ProductWithOptions; onClic
     >
       <Card className="overflow-hidden cursor-pointer h-full" onClick={onClick}>
         <div className="aspect-square bg-muted relative">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+          {displayMedia ? (
+            <>
+              {displayMedia.type === 'video' ? (
+                <video
+                  src={displayMedia.url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  loop
+                  onMouseEnter={(e) => e.currentTarget.play()}
+                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                />
+              ) : (
+                <img
+                  src={displayMedia.url}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              {/* Media count badge */}
+              {mediaCount > 1 && (
+                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                  <Image className="w-3 h-3" />
+                  <span>{mediaCount}</span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Store className="w-12 h-12 text-muted-foreground" />

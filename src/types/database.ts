@@ -16,6 +16,7 @@ export interface Business {
   description: string | null;
   logo_url: string | null;
   cover_image_url: string | null;
+  cover_video_url: string | null;
   primary_color: string | null;
   secondary_color: string | null;
   whatsapp_number: string;
@@ -39,6 +40,9 @@ export interface Product {
   description: string | null;
   price: number;
   image_url: string | null;
+  image_urls: string[] | null;
+  video_urls: string[] | null;
+  main_image_url: string | null;
   category: string | null;
   category_id: string | null;
   prep_hours: number;

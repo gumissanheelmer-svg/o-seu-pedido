@@ -66,6 +66,7 @@ export type Database = {
           business_type: Database["public"]["Enums"]["business_type"]
           confirmation_message: string | null
           cover_image_url: string | null
+          cover_video_url: string | null
           created_at: string
           description: string | null
           emola_number: string | null
@@ -89,6 +90,7 @@ export type Database = {
           business_type?: Database["public"]["Enums"]["business_type"]
           confirmation_message?: string | null
           cover_image_url?: string | null
+          cover_video_url?: string | null
           created_at?: string
           description?: string | null
           emola_number?: string | null
@@ -112,6 +114,7 @@ export type Database = {
           business_type?: Database["public"]["Enums"]["business_type"]
           confirmation_message?: string | null
           cover_image_url?: string | null
+          cover_video_url?: string | null
           created_at?: string
           description?: string | null
           emola_number?: string | null
@@ -468,11 +471,14 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: Json | null
+          main_image_url: string | null
           name: string
           prep_hours: number | null
           price: number
           sort_order: number | null
           updated_at: string
+          video_urls: Json | null
         }
         Insert: {
           active?: boolean
@@ -483,11 +489,14 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: Json | null
+          main_image_url?: string | null
           name: string
           prep_hours?: number | null
           price: number
           sort_order?: number | null
           updated_at?: string
+          video_urls?: Json | null
         }
         Update: {
           active?: boolean
@@ -498,11 +507,14 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: Json | null
+          main_image_url?: string | null
           name?: string
           prep_hours?: number | null
           price?: number
           sort_order?: number | null
           updated_at?: string
+          video_urls?: Json | null
         }
         Relationships: [
           {
