@@ -1,50 +1,19 @@
 import { useState, useMemo } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Store, ShoppingCart, ArrowLeft, X, Plus, Minus, Trash2, Play, Image } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { Loader2, Store } from 'lucide-react';
 import { usePublicBusiness } from '@/hooks/useBusiness';
 import { usePublicProducts, ProductWithOptions } from '@/hooks/useProducts';
 import { usePublicCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
-import { formatCurrency } from '@/lib/whatsapp';
-import { CartProvider, useCartContext, SelectedOption } from '@/contexts/CartContext';
+import { CartProvider, useCartContext } from '@/contexts/CartContext';
 import { ProductDetailModal } from '@/components/public/ProductDetailModal';
 import { CheckoutFlow } from '@/components/public/CheckoutFlow';
-
-// Helper to get display media for product
-function getProductDisplayMedia(product: ProductWithOptions): { url: string; type: 'image' | 'video' } | null {
-  const mainImage = product.main_image_url || product.image_url;
-  if (mainImage) return { url: mainImage, type: 'image' };
-  
-  const imageUrls = Array.isArray(product.image_urls) ? product.image_urls : [];
-  if (imageUrls.length > 0) return { url: imageUrls[0], type: 'image' };
-  
-  const videoUrls = Array.isArray(product.video_urls) ? product.video_urls : [];
-  if (videoUrls.length > 0) return { url: videoUrls[0], type: 'video' };
-  
-  return null;
-}
-
-// Get media count
-function getMediaCount(product: ProductWithOptions): number {
-  const images = Array.isArray(product.image_urls) ? product.image_urls.length : (product.image_url ? 1 : 0);
-  const videos = Array.isArray(product.video_urls) ? product.video_urls.length : 0;
-  return images + videos;
-}
-
-// Helper to get initials from business name
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map(word => word[0])
-    .join('')
-    .toUpperCase();
-}
+import { CatalogHero } from '@/components/public/CatalogHero';
+import { CatalogEmptyState } from '@/components/public/CatalogEmptyState';
+import { CatalogProductCard } from '@/components/public/CatalogProductCard';
+import { CatalogFloatingButton } from '@/components/public/CatalogFloatingButton';
+import { CatalogStickyHeader } from '@/components/public/CatalogStickyHeader';
 
 function CatalogContent() {
   const { slug } = useParams<{ slug: string }>();
@@ -59,31 +28,28 @@ function CatalogContent() {
   
   const { items, removeItem, updateQuantity, totalItems, totalAmount, clearCart } = useCartContext();
 
-  // Dynamic styles based on business primary color
-  const dynamicStyles = useMemo(() => {
-    const primaryColor = business?.primary_color || '#C9A24D';
-    return {
-      '--business-primary': primaryColor,
-      '--business-primary-hover': primaryColor,
-    } as React.CSSProperties;
-  }, [business?.primary_color]);
+  const primaryColor = business?.primary_color || '#C9A24D';
 
+  // Loading state
   if (businessLoading || productsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: primaryColor }} />
           <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (businessError || !business) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <Store className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <div className="w-20 h-20 rounded-2xl bg-muted mx-auto mb-4 flex items-center justify-center">
+            <Store className="w-10 h-10 text-muted-foreground" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Negócio Indisponível</h1>
           <p className="text-muted-foreground">
             Este negócio está temporariamente indisponível ou não existe.
@@ -93,6 +59,7 @@ function CatalogContent() {
     );
   }
 
+  // Checkout flow
   if (showCheckout) {
     return (
       <CheckoutFlow 
@@ -121,219 +88,45 @@ function CatalogContent() {
   // Products without category
   const uncategorizedProducts = products?.filter(p => !p.category_id) || [];
 
+  const hasProducts = products && products.length > 0;
+
+  const handleWhatsAppClick = () => {
+    const phone = business.whatsapp_number.replace(/\D/g, '');
+    const text = encodeURIComponent(`Olá! Vi o catálogo de ${business.name} e gostaria de saber mais.`);
+    window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+  };
+
   return (
-    <div className="min-h-screen bg-background" style={dynamicStyles}>
-      {/* Hero Section with Cover */}
-      <div className="relative">
-        {/* Cover Video or Image */}
-        {(business as any).cover_video_url ? (
-          <div className="h-48 sm:h-64 w-full relative overflow-hidden">
-            <video
-              src={(business as any).cover_video_url}
-              className="w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          </div>
-        ) : business.cover_image_url ? (
-          <div className="h-48 sm:h-64 w-full">
-            <img
-              src={business.cover_image_url}
-              alt={business.name}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          </div>
-        ) : (
-          <div 
-            className="h-32 sm:h-40 w-full"
-            style={{ 
-              background: `linear-gradient(135deg, ${business.primary_color || '#C9A24D'}20 0%, ${business.primary_color || '#C9A24D'}05 100%)` 
-            }}
-          />
-        )}
-        
-        {/* Business Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <div className="container max-w-4xl mx-auto px-4 pb-4">
-            <div className="flex items-end gap-4">
-              {/* Logo */}
-              {business.logo_url ? (
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-4 border-background shadow-lg shrink-0 -mb-2">
-                  <img
-                    src={business.logo_url}
-                    alt={business.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div 
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-background shadow-lg flex items-center justify-center text-white text-2xl font-bold shrink-0 -mb-2"
-                  style={{ backgroundColor: business.primary_color || '#C9A24D' }}
-                >
-                  {getInitials(business.name)}
-                </div>
-              )}
-              
-              <div className="flex-1 min-w-0 pb-2">
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                  {business.name}
-                </h1>
-                {business.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                    {business.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Hero Section */}
+      <CatalogHero business={business} />
 
-      {/* Sticky Header with Cart */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="container max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {business.logo_url ? (
-                <img
-                  src={business.logo_url}
-                  alt={business.name}
-                  className="w-8 h-8 rounded-lg object-cover"
-                />
-              ) : (
-                <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                  style={{ backgroundColor: business.primary_color || '#C9A24D' }}
-                >
-                  {getInitials(business.name)}
-                </div>
-              )}
-              <span className="font-semibold text-foreground text-sm">{business.name}</span>
-            </div>
-
-            {/* Cart Button */}
-            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
-                  <ShoppingCart className="w-5 h-5" />
-                  {totalItems > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                      {totalItems}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>Carrinho ({totalItems})</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 flex flex-col h-[calc(100vh-180px)]">
-                  {items.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="text-center">
-                        <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">Carrinho vazio</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 overflow-auto space-y-4">
-                        {items.map((item, index) => (
-                          <div key={index} className="flex gap-3 p-3 bg-muted/50 rounded-lg">
-                            <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
-                              {item.product.image_url ? (
-                                <img
-                                  src={item.product.image_url}
-                                  alt={item.product.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Store className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm truncate">{item.product.name}</h4>
-                              {item.selectedOptions.length > 0 && (
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {item.selectedOptions.map(o => o.valueName).join(', ')}
-                                </p>
-                              )}
-                              <p className="text-sm font-semibold text-primary mt-1">
-                                {formatCurrency(item.unitPrice)}
-                              </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => updateQuantity(index, item.quantity - 1)}
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </Button>
-                                <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => updateQuantity(index, item.quantity + 1)}
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 ml-auto text-destructive"
-                                  onClick={() => removeItem(index)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Separator className="my-4" />
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between text-lg font-bold">
-                          <span>Total</span>
-                          <span className="text-primary">{formatCurrency(totalAmount)}</span>
-                        </div>
-                        <Button 
-                          className="w-full" 
-                          size="lg"
-                          onClick={() => {
-                            setCartOpen(false);
-                            setShowCheckout(true);
-                          }}
-                        >
-                          Finalizar Encomenda
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
-
+      {/* Sticky Header */}
+      <CatalogStickyHeader
+        business={business}
+        cartOpen={cartOpen}
+        setCartOpen={setCartOpen}
+        items={items}
+        totalItems={totalItems}
+        totalAmount={totalAmount}
+        removeItem={removeItem}
+        updateQuantity={updateQuantity}
+        onCheckout={() => {
+          setCartOpen(false);
+          setShowCheckout(true);
+        }}
+      />
 
       {/* Category Filter */}
-      {categories && categories.length > 0 && (
+      {categories && categories.length > 0 && hasProducts && (
         <div className="container max-w-4xl mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
               variant={selectedCategory === null ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(null)}
-              style={selectedCategory === null ? { backgroundColor: business.primary_color || '#C9A24D' } : {}}
+              className="rounded-xl shrink-0"
+              style={selectedCategory === null ? { backgroundColor: primaryColor } : {}}
             >
               Todos
             </Button>
@@ -343,8 +136,8 @@ function CatalogContent() {
                 variant={selectedCategory === cat.id ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
-                className="whitespace-nowrap"
-                style={selectedCategory === cat.id ? { backgroundColor: business.primary_color || '#C9A24D' } : {}}
+                className="whitespace-nowrap rounded-xl shrink-0"
+                style={selectedCategory === cat.id ? { backgroundColor: primaryColor } : {}}
               >
                 {cat.name}
               </Button>
@@ -353,79 +146,84 @@ function CatalogContent() {
         </div>
       )}
 
-      {/* Products */}
-      <main className="container max-w-4xl mx-auto px-4 pb-24">
-        {selectedCategory ? (
-          // Filtered view
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {filteredProducts?.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onClick={() => setSelectedProduct(product)}
-              />
-            ))}
-          </div>
-        ) : (
-          // Grouped by category view
-          <div className="space-y-8">
-            {Object.entries(groupedByCategory).map(([catId, { name, products: catProducts }]) => (
-              <div key={catId}>
-                <h2 className="text-lg font-semibold text-foreground mb-4">{name}</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {catProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onClick={() => setSelectedProduct(product)}
+      {/* Main Content */}
+      {!hasProducts ? (
+        <CatalogEmptyState business={business} />
+      ) : (
+        <main className="container max-w-4xl mx-auto px-4 pb-28 flex-1">
+          {selectedCategory ? (
+            // Filtered view
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {filteredProducts?.map((product) => (
+                <CatalogProductCard
+                  key={product.id}
+                  product={product}
+                  onClick={() => setSelectedProduct(product)}
+                  primaryColor={primaryColor}
+                />
+              ))}
+            </div>
+          ) : (
+            // Grouped by category view
+            <div className="space-y-8">
+              {Object.entries(groupedByCategory).map(([catId, { name, products: catProducts }]) => (
+                <div key={catId}>
+                  <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span 
+                      className="w-1 h-6 rounded-full"
+                      style={{ backgroundColor: primaryColor }}
                     />
-                  ))}
+                    {name}
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {catProducts.map((product) => (
+                      <CatalogProductCard
+                        key={product.id}
+                        product={product}
+                        onClick={() => setSelectedProduct(product)}
+                        primaryColor={primaryColor}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {uncategorizedProducts.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-foreground mb-4">Outros</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {uncategorizedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onClick={() => setSelectedProduct(product)}
+              ))}
+              {uncategorizedProducts.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <span 
+                      className="w-1 h-6 rounded-full"
+                      style={{ backgroundColor: primaryColor }}
                     />
-                  ))}
+                    Outros
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {uncategorizedProducts.map((product) => (
+                      <CatalogProductCard
+                        key={product.id}
+                        product={product}
+                        onClick={() => setSelectedProduct(product)}
+                        primaryColor={primaryColor}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {(!products || products.length === 0) && (
-          <div className="text-center py-12">
-            <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Nenhum produto disponível</p>
-          </div>
-        )}
-      </main>
-
-      {/* Floating Cart Button */}
-      {totalItems > 0 && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto z-40"
-        >
-          <Button
-            className="w-full h-14 text-base text-white shadow-lg"
-            size="lg"
-            onClick={() => setShowCheckout(true)}
-            style={{ backgroundColor: business.primary_color || '#C9A24D' }}
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Ver Carrinho ({totalItems}) • {formatCurrency(totalAmount)}
-          </Button>
-        </motion.div>
+              )}
+            </div>
+          )}
+        </main>
       )}
+
+      {/* Floating Button */}
+      <AnimatePresence>
+        <CatalogFloatingButton
+          totalItems={totalItems}
+          totalAmount={totalAmount}
+          primaryColor={primaryColor}
+          onCartClick={() => setShowCheckout(true)}
+          onWhatsAppClick={handleWhatsAppClick}
+          showWhatsApp={!hasProducts}
+        />
+      </AnimatePresence>
 
       {/* Product Detail Modal */}
       <ProductDetailModal
@@ -435,79 +233,12 @@ function CatalogContent() {
       />
 
       {/* Footer */}
-      <footer className="container max-w-4xl mx-auto px-4 py-6 text-center">
+      <footer className="container max-w-4xl mx-auto px-4 py-6 text-center mt-auto">
         <p className="text-xs text-muted-foreground">
-          Powered by <span className="text-primary font-semibold">Agenda Smart</span>
+          Powered by <span className="font-semibold" style={{ color: primaryColor }}>Agenda Smart</span>
         </p>
       </footer>
     </div>
-  );
-}
-
-function ProductCard({ product, onClick }: { product: ProductWithOptions; onClick: () => void }) {
-  const displayMedia = getProductDisplayMedia(product);
-  const mediaCount = getMediaCount(product);
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Card className="overflow-hidden cursor-pointer h-full" onClick={onClick}>
-        <div className="aspect-square bg-muted relative">
-          {displayMedia ? (
-            <>
-              {displayMedia.type === 'video' ? (
-                <video
-                  src={displayMedia.url}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                  loop
-                  onMouseEnter={(e) => e.currentTarget.play()}
-                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                />
-              ) : (
-                <img
-                  src={displayMedia.url}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              )}
-              {/* Media count badge */}
-              {mediaCount > 1 && (
-                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <Image className="w-3 h-3" />
-                  <span>{mediaCount}</span>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Store className="w-12 h-12 text-muted-foreground" />
-            </div>
-          )}
-        </div>
-        <CardContent className="p-3">
-          <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-          {product.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-              {product.description}
-            </p>
-          )}
-          <p className="text-base font-bold text-primary mt-2">
-            {formatCurrency(product.price)}
-          </p>
-          {product.options && product.options.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              + opções disponíveis
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
   );
 }
 
