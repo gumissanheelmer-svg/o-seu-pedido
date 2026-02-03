@@ -60,7 +60,28 @@ export function useBusiness() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (updates) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['business', effectiveBusinessId] });
+      
+      // Snapshot previous value
+      const previousBusiness = queryClient.getQueryData(['business', effectiveBusinessId]);
+      
+      // Optimistically update
+      queryClient.setQueryData(['business', effectiveBusinessId], (old: Business | null) => 
+        old ? { ...old, ...updates } : old
+      );
+      
+      return { previousBusiness };
+    },
+    onError: (_err, _updates, context) => {
+      // Rollback on error
+      if (context?.previousBusiness) {
+        queryClient.setQueryData(['business', effectiveBusinessId], context.previousBusiness);
+      }
+    },
+    onSettled: () => {
+      // Sync with server
       queryClient.invalidateQueries({ queryKey: ['business', effectiveBusinessId] });
     },
   });
