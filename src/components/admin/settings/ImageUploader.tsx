@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Loader2, Camera, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Camera, Image as ImageIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -21,24 +21,34 @@ export function ImageUploader({
   currentUrl,
   onUpload,
   onRemove,
-  uploading = false,
   aspectRatio = 'square',
   className,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const handleFileSelect = async (file: File) => {
-    // Show local preview immediately
+    // Show local preview IMMEDIATELY - no loading state visible
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
+    setIsUploading(true);
+    setUploadSuccess(false);
     
-    // Upload file
+    // Upload in background - user sees preview instantly
     const uploadedUrl = await onUpload(file);
     
+    setIsUploading(false);
+    
     if (uploadedUrl) {
-      setPreviewUrl(null); // Clear local preview, use server URL
+      // Show success briefly
+      setUploadSuccess(true);
+      setTimeout(() => {
+        setUploadSuccess(false);
+        setPreviewUrl(null); // Now use server URL
+      }, 800);
     } else {
       setPreviewUrl(null); // Clear preview on error
     }
@@ -122,14 +132,14 @@ export function ImageUploader({
                 alt={label}
                 className="w-full h-full object-cover"
               />
-              {/* Overlay with actions */}
+              {/* Overlay with actions - only on hover, no blocking loader */}
               <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="secondary"
                   onClick={() => inputRef.current?.click()}
-                  disabled={uploading}
+                  disabled={isUploading}
                 >
                   <Camera className="w-4 h-4 mr-1" />
                   Alterar
@@ -140,15 +150,36 @@ export function ImageUploader({
                     size="sm"
                     variant="destructive"
                     onClick={onRemove}
-                    disabled={uploading}
+                    disabled={isUploading}
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 )}
               </div>
-              {uploading && (
-                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              
+              {/* Success indicator - subtle and quick */}
+              <AnimatePresence>
+                {uploadSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute bottom-2 right-2 bg-green-500 text-white rounded-full p-1.5 shadow-lg"
+                  >
+                    <Check className="w-4 h-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Subtle upload progress bar at bottom */}
+              {isUploading && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+                  <motion.div
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 2, ease: 'easeOut' }}
+                    className="h-full bg-primary"
+                  />
                 </div>
               )}
             </motion.div>
@@ -160,23 +191,17 @@ export function ImageUploader({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => inputRef.current?.click()}
-              disabled={uploading}
+              disabled={isUploading}
               className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              {uploading ? (
-                <Loader2 className="w-8 h-8 animate-spin" />
+              {isSquare ? (
+                <ImageIcon className="w-8 h-8" />
               ) : (
-                <>
-                  {isSquare ? (
-                    <ImageIcon className="w-8 h-8" />
-                  ) : (
-                    <Upload className="w-8 h-8" />
-                  )}
-                  <span className="text-xs text-center px-4">
-                    Clique ou arraste uma imagem
-                  </span>
-                </>
+                <Upload className="w-8 h-8" />
               )}
+              <span className="text-xs text-center px-4">
+                Clique ou arraste uma imagem
+              </span>
             </motion.button>
           )}
         </AnimatePresence>
