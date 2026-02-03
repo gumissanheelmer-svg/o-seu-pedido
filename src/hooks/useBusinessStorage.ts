@@ -7,8 +7,8 @@ interface UploadOptions {
 }
 
 const DEFAULT_OPTIONS: UploadOptions = {
-  maxSizeMB: 5,
-  allowedTypes: ['image/png', 'image/jpeg', 'image/webp'],
+  maxSizeMB: 10, // 10MB for images (iPhone compatibility)
+  allowedTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/heic'],
 };
 
 export function useBusinessStorage() {

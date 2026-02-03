@@ -15,10 +15,10 @@ interface UploadOptions {
 }
 
 const DEFAULT_OPTIONS: UploadOptions = {
-  maxSizeMB: 25,
+  maxSizeMB: 100, // 100MB for videos (iPhone compatibility)
   maxFiles: 10,
   allowedImageTypes: ['image/png', 'image/jpeg', 'image/webp'],
-  allowedVideoTypes: ['video/mp4', 'video/webm'],
+  allowedVideoTypes: ['video/mp4', 'video/webm', 'video/quicktime'], // Added MOV for iPhone
 };
 
 interface UseMediaUploadReturn {
@@ -58,12 +58,12 @@ export function useMediaUpload(): UseMediaUploadReturn {
       return `Tipo de ficheiro não permitido. Use: ${allowedTypes?.join(', ')}`;
     }
     
-    const maxImageSize = 5 * 1024 * 1024; // 5MB for images
-    const maxVideoSize = maxSizeMB * 1024 * 1024; // 25MB for videos
+    const maxImageSize = 10 * 1024 * 1024; // 10MB for images
+    const maxVideoSize = maxSizeMB * 1024 * 1024; // 100MB for videos
     const maxSize = type === 'image' ? maxImageSize : maxVideoSize;
     
     if (file.size > maxSize) {
-      const sizeMB = type === 'image' ? 5 : maxSizeMB;
+      const sizeMB = type === 'image' ? 10 : maxSizeMB;
       return `Ficheiro muito grande. Máximo: ${sizeMB}MB`;
     }
     

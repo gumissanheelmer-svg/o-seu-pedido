@@ -208,7 +208,7 @@ export function ImageUploader({
       </div>
       
       <p className="text-xs text-muted-foreground">
-        PNG, JPG ou WebP • Máximo 5MB
+        PNG, JPG ou WebP • Máximo 10MB
       </p>
     </div>
   );
