@@ -86,23 +86,31 @@ export function useMediaUpload(): UseMediaUploadReturn {
     setUploading(true);
     setProgress(0);
 
-    const uploadedUrls: string[] = [];
     const type = mediaType === 'images' ? 'image' : 'video';
+    const validFiles: { file: File; fileName: string }[] = [];
+
+    // Validate all files first
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const validationError = validateFile(file, type);
+      if (validationError) {
+        setError(validationError);
+        continue;
+      }
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = `${businessId}/${productId}/${mediaType}/${timestamp}_${i}.${fileExt}`;
+      validFiles.push({ file, fileName });
+    }
+
+    if (validFiles.length === 0) {
+      setUploading(false);
+      return [];
+    }
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        const validationError = validateFile(file, type);
-        if (validationError) {
-          setError(validationError);
-          continue;
-        }
-
-        const fileExt = file.name.split('.').pop();
-        const timestamp = Date.now();
-        const fileName = `${businessId}/${productId}/${mediaType}/${timestamp}_${i}.${fileExt}`;
-
+      // Upload all files in parallel for speed
+      const uploadPromises = validFiles.map(async ({ file, fileName }) => {
         const { error: uploadError } = await supabase.storage
           .from('product-media')
           .upload(fileName, file, {
@@ -112,22 +120,37 @@ export function useMediaUpload(): UseMediaUploadReturn {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          setError(`Erro ao fazer upload: ${uploadError.message}`);
-          continue;
+          throw uploadError;
         }
 
         const { data: { publicUrl } } = supabase.storage
           .from('product-media')
           .getPublicUrl(fileName);
 
-        uploadedUrls.push(`${publicUrl}?t=${timestamp}`);
-        setProgress(Math.round(((i + 1) / files.length) * 100));
-      }
+        return `${publicUrl}?t=${Date.now()}`;
+      });
 
-      return uploadedUrls;
+      // Track progress with Promise.allSettled for parallel uploads
+      let completed = 0;
+      const results = await Promise.all(
+        uploadPromises.map(p => 
+          p.then(url => {
+            completed++;
+            setProgress(Math.round((completed / validFiles.length) * 100));
+            return url;
+          }).catch(err => {
+            completed++;
+            setProgress(Math.round((completed / validFiles.length) * 100));
+            setError(`Erro ao fazer upload: ${err.message}`);
+            return null;
+          })
+        )
+      );
+
+      return results.filter((url): url is string => url !== null);
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer upload');
-      return uploadedUrls;
+      return [];
     } finally {
       setUploading(false);
       setProgress(0);
