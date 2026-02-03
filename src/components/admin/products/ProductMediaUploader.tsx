@@ -225,7 +225,7 @@ export function ProductMediaUploader({
         />
 
         <p className="text-xs text-muted-foreground">
-          PNG, JPG ou WebP. Máx 5MB cada. Clique na ⭐ para definir a foto principal.
+          PNG, JPG ou WebP. Máx 10MB cada. Clique na ⭐ para definir a foto principal.
         </p>
       </div>
 
@@ -298,7 +298,7 @@ export function ProductMediaUploader({
         <input
           ref={videoInputRef}
           type="file"
-          accept="video/mp4,video/webm"
+          accept="video/mp4,video/webm,video/quicktime"
           multiple
           className="hidden"
           onChange={(e) => handleVideoUpload(e.target.files)}
@@ -306,7 +306,7 @@ export function ProductMediaUploader({
         />
 
         <p className="text-xs text-muted-foreground">
-          MP4 ou WebM. Máx 25MB cada. 30-60 segundos recomendado.
+          MP4, WebM ou MOV. Máx 100MB cada. 30-60 segundos recomendado.
         </p>
       </div>
 
