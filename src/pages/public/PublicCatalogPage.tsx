@@ -222,6 +222,7 @@ function CatalogContent() {
           onCartClick={() => setShowCheckout(true)}
           onWhatsAppClick={handleWhatsAppClick}
           showWhatsApp={!hasProducts}
+          hasWhatsApp={!!business.whatsapp_number}
         />
       </AnimatePresence>
 
