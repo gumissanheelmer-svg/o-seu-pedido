@@ -45,6 +45,9 @@ export function useMediaUpload(): UseMediaUploadReturn {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep a stable reference so components can safely use it in dependency arrays
+  const clearError = useCallback(() => setError(null), []);
+
   const validateFile = useCallback((
     file: File,
     type: 'image' | 'video',
@@ -234,6 +237,6 @@ export function useMediaUpload(): UseMediaUploadReturn {
     uploadBusinessCover,
     deleteMedia,
     validateFile,
-    clearError: () => setError(null),
+    clearError,
   };
 }
