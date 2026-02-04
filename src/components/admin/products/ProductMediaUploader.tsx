@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Star, Image as ImageIcon, Video, Loader2, AlertCircle, Check } from 'lucide-react';
+import { Upload, X, Star, Image as ImageIcon, Video, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +28,7 @@ interface ProductMediaUploaderProps {
   maxVideos?: number;
 }
 
-export function ProductMediaUploader({
+function ProductMediaUploaderComponent({
   images,
   videos,
   mainImageUrl,
@@ -423,3 +423,6 @@ export function ProductMediaUploader({
     </div>
   );
 }
+
+// Memoize to prevent re-renders from parent state changes
+export const ProductMediaUploader = memo(ProductMediaUploaderComponent);

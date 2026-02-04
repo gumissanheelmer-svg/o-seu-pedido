@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -85,22 +85,38 @@ export function ProductFormDialog({
     }
   }, [open, product, clearError]);
 
-  const handleUploadImages = async (files: File[]): Promise<string[]> => {
-    // For new products, create a temp ID for uploads
-    const productId = tempProductId || `temp_${Date.now()}`;
-    if (!tempProductId) {
+  // Use ref for tempProductId to avoid stale closures in memoized callbacks
+  const tempProductIdRef = useRef(tempProductId);
+  tempProductIdRef.current = tempProductId;
+
+  const handleUploadImages = useCallback(async (files: File[]): Promise<string[]> => {
+    const productId = tempProductIdRef.current || `temp_${Date.now()}`;
+    if (!tempProductIdRef.current) {
       setTempProductId(productId);
     }
     return uploadProductMedia(businessId, productId, files, 'images');
-  };
+  }, [businessId, uploadProductMedia]);
 
-  const handleUploadVideos = async (files: File[]): Promise<string[]> => {
-    const productId = tempProductId || `temp_${Date.now()}`;
-    if (!tempProductId) {
+  const handleUploadVideos = useCallback(async (files: File[]): Promise<string[]> => {
+    const productId = tempProductIdRef.current || `temp_${Date.now()}`;
+    if (!tempProductIdRef.current) {
       setTempProductId(productId);
     }
     return uploadProductMedia(businessId, productId, files, 'videos');
-  };
+  }, [businessId, uploadProductMedia]);
+
+  // Memoized callbacks to prevent ProductMediaUploader re-renders
+  const handleImagesChange = useCallback((urls: string[]) => {
+    setFormData(prev => ({ ...prev, image_urls: urls }));
+  }, []);
+
+  const handleVideosChange = useCallback((urls: string[]) => {
+    setFormData(prev => ({ ...prev, video_urls: urls }));
+  }, []);
+
+  const handleMainImageChange = useCallback((url: string | null) => {
+    setFormData(prev => ({ ...prev, main_image_url: url }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,9 +205,9 @@ export function ProductFormDialog({
                 images={formData.image_urls}
                 videos={formData.video_urls}
                 mainImageUrl={formData.main_image_url}
-                onImagesChange={(urls) => setFormData({ ...formData, image_urls: urls })}
-                onVideosChange={(urls) => setFormData({ ...formData, video_urls: urls })}
-                onMainImageChange={(url) => setFormData({ ...formData, main_image_url: url })}
+                onImagesChange={handleImagesChange}
+                onVideosChange={handleVideosChange}
+                onMainImageChange={handleMainImageChange}
                 onUploadImages={handleUploadImages}
                 onUploadVideos={handleUploadVideos}
                 uploading={uploading}
