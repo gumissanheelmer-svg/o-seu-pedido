@@ -49,11 +49,16 @@ export function ProductMediaUploader({
   const [pendingImages, setPendingImages] = useState<PendingMedia[]>([]);
   const [pendingVideos, setPendingVideos] = useState<PendingMedia[]>([]);
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs on unmount - use ref to avoid re-renders
+  const pendingImagesRef = useRef(pendingImages);
+  const pendingVideosRef = useRef(pendingVideos);
+  pendingImagesRef.current = pendingImages;
+  pendingVideosRef.current = pendingVideos;
+
   useEffect(() => {
     return () => {
-      pendingImages.forEach(p => URL.revokeObjectURL(p.localUrl));
-      pendingVideos.forEach(p => URL.revokeObjectURL(p.localUrl));
+      pendingImagesRef.current.forEach(p => URL.revokeObjectURL(p.localUrl));
+      pendingVideosRef.current.forEach(p => URL.revokeObjectURL(p.localUrl));
     };
   }, []);
 
