@@ -83,7 +83,10 @@ export function ProductFormDialog({
       }
       clearError();
     }
-  }, [open, product, clearError]);
+    // NOTE: we intentionally don't include `clearError` in deps because it's not memoized
+    // and we don't want this effect to re-run on every render (which clears what the user types).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, product]);
 
   // Use ref for tempProductId to avoid stale closures in memoized callbacks
   const tempProductIdRef = useRef(tempProductId);
