@@ -1,14 +1,15 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Star, Image as ImageIcon, Video, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, X, Star, Image as ImageIcon, Video, Loader2, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
-interface MediaItem {
-  url: string;
-  type: 'image' | 'video';
-  isMain?: boolean;
+interface PendingMedia {
+  localUrl: string;
+  file: File;
+  uploading: boolean;
+  uploaded: boolean;
+  finalUrl?: string;
 }
 
 interface ProductMediaUploaderProps {
@@ -45,40 +46,114 @@ export function ProductMediaUploader({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState<'image' | 'video' | null>(null);
+  const [pendingImages, setPendingImages] = useState<PendingMedia[]>([]);
+  const [pendingVideos, setPendingVideos] = useState<PendingMedia[]>([]);
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      pendingImages.forEach(p => URL.revokeObjectURL(p.localUrl));
+      pendingVideos.forEach(p => URL.revokeObjectURL(p.localUrl));
+    };
+  }, []);
 
   const handleImageUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     
-    const remainingSlots = maxImages - images.length;
+    const remainingSlots = maxImages - images.length - pendingImages.length;
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     
     if (filesToUpload.length === 0) return;
+
+    // Create instant previews
+    const newPending: PendingMedia[] = filesToUpload.map(file => ({
+      localUrl: URL.createObjectURL(file),
+      file,
+      uploading: true,
+      uploaded: false,
+    }));
     
+    setPendingImages(prev => [...prev, ...newPending]);
+
+    // Set first as main if needed
+    if (!mainImageUrl && images.length === 0 && pendingImages.length === 0) {
+      onMainImageChange(newPending[0].localUrl);
+    }
+    
+    // Upload in background
     const newUrls = await onUploadImages(filesToUpload);
+    
     if (newUrls.length > 0) {
+      // Update pending with final URLs
+      setPendingImages(prev => {
+        const updated = [...prev];
+        newPending.forEach((pending, i) => {
+          const idx = updated.findIndex(p => p.localUrl === pending.localUrl);
+          if (idx !== -1 && newUrls[i]) {
+            updated[idx] = { ...updated[idx], uploading: false, uploaded: true, finalUrl: newUrls[i] };
+          }
+        });
+        return updated;
+      });
+
+      // Move to permanent images
       const updatedImages = [...images, ...newUrls];
       onImagesChange(updatedImages);
       
-      // Set first image as main if no main exists
-      if (!mainImageUrl && updatedImages.length > 0) {
-        onMainImageChange(updatedImages[0]);
+      // Update main image if it was a local URL
+      if (mainImageUrl === newPending[0]?.localUrl && newUrls[0]) {
+        onMainImageChange(newUrls[0]);
       }
+
+      // Clean up pending after short delay
+      setTimeout(() => {
+        setPendingImages(prev => prev.filter(p => !newPending.some(np => np.localUrl === p.localUrl)));
+        newPending.forEach(p => URL.revokeObjectURL(p.localUrl));
+      }, 500);
     }
-  }, [images, maxImages, mainImageUrl, onUploadImages, onImagesChange, onMainImageChange]);
+  }, [images, maxImages, mainImageUrl, pendingImages.length, onUploadImages, onImagesChange, onMainImageChange]);
 
   const handleVideoUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     
-    const remainingSlots = maxVideos - videos.length;
+    const remainingSlots = maxVideos - videos.length - pendingVideos.length;
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     
     if (filesToUpload.length === 0) return;
+
+    // Create instant previews
+    const newPending: PendingMedia[] = filesToUpload.map(file => ({
+      localUrl: URL.createObjectURL(file),
+      file,
+      uploading: true,
+      uploaded: false,
+    }));
     
+    setPendingVideos(prev => [...prev, ...newPending]);
+    
+    // Upload in background
     const newUrls = await onUploadVideos(filesToUpload);
+    
     if (newUrls.length > 0) {
+      setPendingVideos(prev => {
+        const updated = [...prev];
+        newPending.forEach((pending, i) => {
+          const idx = updated.findIndex(p => p.localUrl === pending.localUrl);
+          if (idx !== -1 && newUrls[i]) {
+            updated[idx] = { ...updated[idx], uploading: false, uploaded: true, finalUrl: newUrls[i] };
+          }
+        });
+        return updated;
+      });
+
       onVideosChange([...videos, ...newUrls]);
+
+      setTimeout(() => {
+        setPendingVideos(prev => prev.filter(p => !newPending.some(np => np.localUrl === p.localUrl)));
+        newPending.forEach(p => URL.revokeObjectURL(p.localUrl));
+      }, 500);
     }
-  }, [videos, maxVideos, onUploadVideos, onVideosChange]);
+  }, [videos, maxVideos, pendingVideos.length, onUploadVideos, onVideosChange]);
 
   const handleDrop = useCallback((e: React.DragEvent, type: 'image' | 'video') => {
     e.preventDefault();
@@ -110,6 +185,11 @@ export function ProductMediaUploader({
     onMainImageChange(url);
   };
 
+  const allImages = [...images, ...pendingImages.filter(p => !p.uploaded).map(p => p.localUrl)];
+  const allVideos = [...videos, ...pendingVideos.filter(p => !p.uploaded).map(p => p.localUrl)];
+  const isImagePending = (url: string) => pendingImages.some(p => p.localUrl === url && p.uploading);
+  const isVideoPending = (url: string) => pendingVideos.some(p => p.localUrl === url && p.uploading);
+
   return (
     <div className="space-y-6">
       {/* Error Display */}
@@ -117,17 +197,6 @@ export function ProductMediaUploader({
         <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
-        </div>
-      )}
-
-      {/* Upload Progress */}
-      {uploading && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Fazendo upload... {progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
         </div>
       )}
 
@@ -139,63 +208,77 @@ export function ProductMediaUploader({
             <span className="font-medium text-sm">Fotos do Produto</span>
           </div>
           <span className="text-xs text-muted-foreground">
-            {images.length}/{maxImages}
+            {allImages.length}/{maxImages}
           </span>
         </div>
 
         {/* Image Grid */}
         <div className="grid grid-cols-4 gap-2">
           <AnimatePresence mode="popLayout">
-            {images.map((url, index) => (
-              <motion.div
-                key={url}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative aspect-square group"
-              >
-                <img
-                  src={url}
-                  alt={`Produto ${index + 1}`}
-                  className={cn(
-                    "w-full h-full object-cover rounded-lg border-2",
-                    url === mainImageUrl ? "border-primary" : "border-transparent"
+            {allImages.map((url, index) => {
+              const isPending = isImagePending(url);
+              const isActualImage = images.includes(url);
+              
+              return (
+                <motion.div
+                  key={url}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="relative aspect-square group"
+                >
+                  <img
+                    src={url}
+                    alt={`Produto ${index + 1}`}
+                    className={cn(
+                      "w-full h-full object-cover rounded-lg border-2",
+                      url === mainImageUrl ? "border-primary" : "border-transparent",
+                      isPending && "opacity-70"
+                    )}
+                  />
+                  {/* Upload indicator */}
+                  {isPending && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    </div>
                   )}
-                />
-                {url === mainImageUrl && (
-                  <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
-                    <Star className="w-3 h-3 fill-current" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
-                  {url !== mainImageUrl && (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="w-7 h-7 text-white hover:text-primary"
-                      onClick={() => setAsMainImage(url)}
-                      title="Definir como principal"
-                    >
-                      <Star className="w-4 h-4" />
-                    </Button>
+                  {url === mainImageUrl && !isPending && (
+                    <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-1">
+                      <Star className="w-3 h-3 fill-current" />
+                    </div>
                   )}
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="w-7 h-7 text-white hover:text-destructive"
-                    onClick={() => removeImage(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                  {!isPending && isActualImage && (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
+                      {url !== mainImageUrl && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="w-7 h-7 text-white hover:text-primary"
+                          onClick={() => setAsMainImage(url)}
+                          title="Definir como principal"
+                        >
+                          <Star className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="w-7 h-7 text-white hover:text-destructive"
+                        onClick={() => removeImage(images.indexOf(url))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
           {/* Upload Button */}
-          {images.length < maxImages && (
+          {allImages.length < maxImages && (
             <div
               className={cn(
                 "aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors",
@@ -220,8 +303,7 @@ export function ProductMediaUploader({
           accept="image/png,image/jpeg,image/webp"
           multiple
           className="hidden"
-          onChange={(e) => handleImageUpload(e.target.files)}
-          disabled={uploading}
+          onChange={(e) => { handleImageUpload(e.target.files); e.target.value = ''; }}
         />
 
         <p className="text-xs text-muted-foreground">
@@ -237,46 +319,61 @@ export function ProductMediaUploader({
             <span className="font-medium text-sm">Vídeos do Produto</span>
           </div>
           <span className="text-xs text-muted-foreground">
-            {videos.length}/{maxVideos}
+            {allVideos.length}/{maxVideos}
           </span>
         </div>
 
         {/* Video Grid */}
         <div className="grid grid-cols-3 gap-2">
           <AnimatePresence mode="popLayout">
-            {videos.map((url, index) => (
-              <motion.div
-                key={url}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative aspect-video group"
-              >
-                <video
-                  src={url}
-                  className="w-full h-full object-cover rounded-lg"
-                  muted
-                  playsInline
-                  onMouseEnter={(e) => e.currentTarget.play()}
-                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="w-7 h-7 text-white hover:text-destructive"
-                    onClick={() => removeVideo(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+            {allVideos.map((url, index) => {
+              const isPending = isVideoPending(url);
+              const isActualVideo = videos.includes(url);
+              
+              return (
+                <motion.div
+                  key={url}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="relative aspect-video group"
+                >
+                  <video
+                    src={url}
+                    className={cn(
+                      "w-full h-full object-cover rounded-lg",
+                      isPending && "opacity-70"
+                    )}
+                    muted
+                    playsInline
+                    onMouseEnter={(e) => !isPending && e.currentTarget.play()}
+                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                  />
+                  {isPending && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    </div>
+                  )}
+                  {!isPending && isActualVideo && (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="w-7 h-7 text-white hover:text-destructive"
+                        onClick={() => removeVideo(videos.indexOf(url))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
 
           {/* Upload Button */}
-          {videos.length < maxVideos && (
+          {allVideos.length < maxVideos && (
             <div
               className={cn(
                 "aspect-video border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors",
@@ -301,8 +398,7 @@ export function ProductMediaUploader({
           accept="video/mp4,video/webm,video/quicktime"
           multiple
           className="hidden"
-          onChange={(e) => handleVideoUpload(e.target.files)}
-          disabled={uploading}
+          onChange={(e) => { handleVideoUpload(e.target.files); e.target.value = ''; }}
         />
 
         <p className="text-xs text-muted-foreground">
