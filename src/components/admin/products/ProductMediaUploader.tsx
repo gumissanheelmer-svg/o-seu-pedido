@@ -185,10 +185,13 @@ export function ProductMediaUploader({
     onMainImageChange(url);
   };
 
-  const allImages = [...images, ...pendingImages.filter(p => !p.uploaded).map(p => p.localUrl)];
-  const allVideos = [...videos, ...pendingVideos.filter(p => !p.uploaded).map(p => p.localUrl)];
-  const isImagePending = (url: string) => pendingImages.some(p => p.localUrl === url && p.uploading);
-  const isVideoPending = (url: string) => pendingVideos.some(p => p.localUrl === url && p.uploading);
+  // Only show pending items that are still uploading (not yet in the final images array)
+  const pendingImageUrls = pendingImages.filter(p => p.uploading && !p.uploaded).map(p => p.localUrl);
+  const pendingVideoUrls = pendingVideos.filter(p => p.uploading && !p.uploaded).map(p => p.localUrl);
+  const allImages = [...images, ...pendingImageUrls];
+  const allVideos = [...videos, ...pendingVideoUrls];
+  const isImagePending = (url: string) => pendingImageUrls.includes(url);
+  const isVideoPending = (url: string) => pendingVideoUrls.includes(url);
 
   return (
     <div className="space-y-6">
