@@ -17,7 +17,7 @@ import { useState } from 'react';
 
 const navItems = [
   { path: '/superadmin', label: 'Empresas', icon: Building2 },
-  { path: '/superadmin/assinaturas', label: 'Assinaturas', icon: Receipt },
+  { path: '/superadmin/ativacoes', label: 'Ativações', icon: Receipt },
    { path: '/superadmin/afiliados', label: 'Afiliados', icon: Users },
   { path: '/superadmin/metricas', label: 'Métricas', icon: BarChart3 },
 ];

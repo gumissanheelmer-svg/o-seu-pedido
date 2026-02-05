@@ -110,12 +110,12 @@ const Metrics = () => {
       cancelled: subscriptions.filter(s => s.status === 'cancelled').length,
     };
 
-    return [
-      { name: 'Pendentes', value: statusCounts.pending, color: 'hsl(var(--warning))' },
-      { name: 'Pagas', value: statusCounts.active, color: 'hsl(var(--success))' },
-      { name: 'Atrasadas', value: statusCounts.overdue, color: 'hsl(var(--destructive))' },
-      { name: 'Canceladas', value: statusCounts.cancelled, color: 'hsl(var(--muted))' },
-    ].filter(item => item.value > 0);
+     return [
+       { name: 'Ativações Pendentes', value: statusCounts.pending, color: 'hsl(var(--warning))' },
+       { name: 'Ativações Concluídas', value: statusCounts.active, color: 'hsl(var(--success))' },
+       { name: 'Bloqueadas', value: statusCounts.overdue, color: 'hsl(var(--destructive))' },
+       { name: 'Canceladas', value: statusCounts.cancelled, color: 'hsl(var(--muted))' },
+     ].filter(item => item.value > 0);
   }, [subscriptions]);
 
   // Calculate subscription revenue
@@ -126,19 +126,6 @@ const Metrics = () => {
       .reduce((sum, s) => sum + s.amount, 0);
   }, [subscriptions]);
 
-  // Upcoming due subscriptions (next 7 days)
-  const upcomingDue = useMemo(() => {
-    if (!subscriptions) return [];
-    const now = new Date();
-    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    return subscriptions
-      .filter(s => {
-        const dueDate = new Date(s.due_date);
-        return s.status === 'pending' && dueDate >= now && dueDate <= nextWeek;
-      })
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-  }, [subscriptions]);
 
    if (isLoading || isLoadingAffiliates) {
     return (
@@ -301,11 +288,11 @@ const Metrics = () => {
         </div>
       </div>
 
-      {/* Key Metrics - Mensalidades */}
-      <div>
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-primary" />
-          Mensalidades
+       {/* Key Metrics - Ativações */}
+       <div>
+         <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+           <CreditCard className="w-5 h-5 text-primary" />
+           Ativações
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -328,8 +315,8 @@ const Metrics = () => {
                   <Clock className="w-5 h-5 text-warning" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{metrics.pendingSubscriptions}</p>
-                  <p className="text-xs text-muted-foreground">Pendentes</p>
+                   <p className="text-2xl font-bold">{metrics.pendingSubscriptions}</p>
+                   <p className="text-xs text-muted-foreground">Ativações Pendentes</p>
                 </div>
               </div>
             </CardContent>
@@ -341,8 +328,8 @@ const Metrics = () => {
                   <AlertTriangle className="w-5 h-5 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{metrics.overdueSubscriptions}</p>
-                  <p className="text-xs text-muted-foreground">Atrasadas</p>
+                   <p className="text-2xl font-bold">{metrics.overdueSubscriptions}</p>
+                   <p className="text-xs text-muted-foreground">Bloqueadas</p>
                 </div>
               </div>
             </CardContent>
@@ -354,8 +341,8 @@ const Metrics = () => {
                   <CheckCircle className="w-5 h-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{subscriptionRevenue.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Receita (MZN)</p>
+                   <p className="text-2xl font-bold">{subscriptionRevenue.toLocaleString()}</p>
+                   <p className="text-xs text-muted-foreground">Receita de Ativações (MZN)</p>
                 </div>
               </div>
             </CardContent>
