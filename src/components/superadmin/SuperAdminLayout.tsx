@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Shield, 
   Building2, 
-  CreditCard, 
+  Receipt, 
   BarChart3, 
   LogOut,
   Menu,
@@ -17,7 +17,7 @@ import { useState } from 'react';
 
 const navItems = [
   { path: '/superadmin', label: 'Empresas', icon: Building2 },
-  { path: '/superadmin/mensalidades', label: 'Mensalidades', icon: CreditCard },
+  { path: '/superadmin/assinaturas', label: 'Assinaturas', icon: Receipt },
    { path: '/superadmin/afiliados', label: 'Afiliados', icon: Users },
   { path: '/superadmin/metricas', label: 'Métricas', icon: BarChart3 },
 ];

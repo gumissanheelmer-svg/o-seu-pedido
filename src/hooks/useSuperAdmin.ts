@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ApprovalStatus, SubscriptionStatus } from '@/types/database';
+import { ApprovalStatus, SubscriptionStatus, SubscriptionPlan } from '@/types/database';
 
 export interface BusinessWithOwner {
   id: string;
@@ -25,10 +25,19 @@ export interface Subscription {
   status: SubscriptionStatus;
   paid_at: string | null;
   created_at: string;
+  plan: SubscriptionPlan;
+  start_date: string | null;
+  next_billing_date: string | null;
+  affiliate_id: string | null;
+  internal_notes: string | null;
   business?: {
     name: string;
     slug: string;
   };
+  affiliate?: {
+    name: string;
+    phone: string;
+  } | null;
 }
 
 export function useSuperAdmin() {
@@ -57,9 +66,10 @@ export function useSuperAdmin() {
         .from('subscriptions')
         .select(`
           *,
-          business:businesses(name, slug)
+          business:businesses(name, slug),
+          affiliate:affiliates_orders(name, phone)
         `)
-        .order('due_date', { ascending: true });
+        .order('next_billing_date', { ascending: true });
 
       if (error) throw error;
       return data as Subscription[];
@@ -111,18 +121,34 @@ export function useSuperAdmin() {
     mutationFn: async ({ 
       subscriptionId, 
       status, 
-      paidAt 
+      paidAt,
+      plan,
+      amount,
+      nextBillingDate,
+      affiliateId,
+      internalNotes,
     }: { 
       subscriptionId: string; 
-      status: SubscriptionStatus; 
+      status?: SubscriptionStatus; 
       paidAt?: string | null;
+      plan?: SubscriptionPlan;
+      amount?: number;
+      nextBillingDate?: string;
+      affiliateId?: string | null;
+      internalNotes?: string | null;
     }) => {
+      const updateData: Record<string, unknown> = {};
+      if (status !== undefined) updateData.status = status;
+      if (paidAt !== undefined) updateData.paid_at = paidAt;
+      if (plan !== undefined) updateData.plan = plan;
+      if (amount !== undefined) updateData.amount = amount;
+      if (nextBillingDate !== undefined) updateData.next_billing_date = nextBillingDate;
+      if (affiliateId !== undefined) updateData.affiliate_id = affiliateId;
+      if (internalNotes !== undefined) updateData.internal_notes = internalNotes;
+
       const { error } = await supabase
         .from('subscriptions')
-        .update({ 
-          status, 
-          paid_at: paidAt 
-        })
+        .update(updateData)
         .eq('id', subscriptionId);
 
       if (error) throw error;
@@ -131,13 +157,13 @@ export function useSuperAdmin() {
       queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
       toast({
         title: 'Sucesso',
-        description: 'Mensalidade atualizada.',
+        description: 'Assinatura atualizada.',
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao atualizar mensalidade.',
+        description: error.message || 'Erro ao atualizar assinatura.',
         variant: 'destructive',
       });
     },
@@ -148,11 +174,17 @@ export function useSuperAdmin() {
     mutationFn: async ({ 
       businessId, 
       amount, 
-      dueDate 
+      dueDate,
+      plan,
+      affiliateId,
+      internalNotes,
     }: { 
       businessId: string; 
       amount: number; 
       dueDate: string;
+      plan?: SubscriptionPlan;
+      affiliateId?: string | null;
+      internalNotes?: string | null;
     }) => {
       const { error } = await supabase
         .from('subscriptions')
@@ -160,6 +192,11 @@ export function useSuperAdmin() {
           business_id: businessId,
           amount,
           due_date: dueDate,
+          next_billing_date: dueDate,
+          plan: plan || 'starter',
+          affiliate_id: affiliateId,
+          internal_notes: internalNotes,
+          start_date: new Date().toISOString().split('T')[0],
         });
 
       if (error) throw error;
@@ -168,13 +205,13 @@ export function useSuperAdmin() {
       queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
       toast({
         title: 'Sucesso',
-        description: 'Mensalidade criada.',
+        description: 'Assinatura criada.',
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao criar mensalidade.',
+        description: error.message || 'Erro ao criar assinatura.',
         variant: 'destructive',
       });
     },
@@ -189,6 +226,9 @@ export function useSuperAdmin() {
     pendingSubscriptions: subscriptions?.filter(s => s.status === 'pending').length || 0,
     overdueSubscriptions: subscriptions?.filter(s => s.status === 'overdue').length || 0,
     paidSubscriptions: paidSubscriptionsCount,
+    activeSubscriptions: subscriptions?.filter(s => s.status === 'active').length || 0,
+    totalRevenue: subscriptions?.filter(s => s.status === 'active').reduce((sum, s) => sum + s.amount, 0) || 0,
+    overdueRevenue: subscriptions?.filter(s => s.status === 'overdue').reduce((sum, s) => sum + s.amount, 0) || 0,
   };
 
   return {
