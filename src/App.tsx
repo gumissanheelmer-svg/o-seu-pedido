@@ -29,6 +29,7 @@ import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
 import Businesses from "./pages/superadmin/Businesses";
 import Subscriptions from "./pages/superadmin/Subscriptions";
 import Metrics from "./pages/superadmin/Metrics";
+ import Affiliates from "./pages/superadmin/Affiliates";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route index element={<Businesses />} />
             <Route path="mensalidades" element={<Subscriptions />} />
             <Route path="metricas" element={<Metrics />} />
+             <Route path="afiliados" element={<Affiliates />} />
           </Route>
           
           {/* Catch-all */}
