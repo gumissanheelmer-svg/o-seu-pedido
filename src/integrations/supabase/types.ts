@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliate_sales_orders: {
+        Row: {
+          affiliate_id: string
+          business_id: string
+          commission_value: number
+          created_at: string
+          id: string
+          platform_profit: number | null
+          sale_value: number
+        }
+        Insert: {
+          affiliate_id: string
+          business_id: string
+          commission_value?: number
+          created_at?: string
+          id?: string
+          platform_profit?: number | null
+          sale_value?: number
+        }
+        Update: {
+          affiliate_id?: string
+          business_id?: string
+          commission_value?: number
+          created_at?: string
+          id?: string
+          platform_profit?: number | null
+          sale_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_sales_orders_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_sales_orders_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates_orders: {
+        Row: {
+          active: boolean
+          created_at: string
+          fixed_commission: number
+          id: string
+          name: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          fixed_commission?: number
+          id?: string
+          name: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          fixed_commission?: number
+          id?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -62,6 +137,7 @@ export type Database = {
         Row: {
           active: boolean
           address: string | null
+          affiliate_id: string | null
           approval_status: Database["public"]["Enums"]["approval_status"]
           business_type: Database["public"]["Enums"]["business_type"]
           confirmation_message: string | null
@@ -86,6 +162,7 @@ export type Database = {
         Insert: {
           active?: boolean
           address?: string | null
+          affiliate_id?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           business_type?: Database["public"]["Enums"]["business_type"]
           confirmation_message?: string | null
@@ -110,6 +187,7 @@ export type Database = {
         Update: {
           active?: boolean
           address?: string | null
+          affiliate_id?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           business_type?: Database["public"]["Enums"]["business_type"]
           confirmation_message?: string | null
@@ -131,7 +209,15 @@ export type Database = {
           updated_at?: string
           whatsapp_number?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "businesses_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {

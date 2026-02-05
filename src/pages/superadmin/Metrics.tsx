@@ -8,21 +8,34 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Ban
+   Ban,
+   Users,
+   DollarSign,
+   TrendingUp,
+   ShoppingBag
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+ import { useAffiliates } from '@/hooks/useAffiliates';
 import { 
   PieChart,
   Pie,
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend
+   Legend,
+   BarChart,
+   Bar,
+   XAxis,
+   YAxis,
+   CartesianGrid,
+   LineChart,
+   Line
 } from 'recharts';
 
 const Metrics = () => {
   const { businesses, subscriptions, metrics, isLoading } = useSuperAdmin();
+   const { affiliatesWithStats, affiliateSales, metrics: affiliateMetrics, isLoading: isLoadingAffiliates } = useAffiliates();
 
   // Business status distribution
   const businessStatusData = useMemo(() => {
@@ -42,6 +55,49 @@ const Metrics = () => {
       { name: 'Bloqueadas', value: statusCounts.blocked, color: 'hsl(var(--destructive))' },
     ].filter(item => item.value > 0);
   }, [businesses]);
+   
+   // Affiliate performance data
+   const affiliatePerformanceData = useMemo(() => {
+     if (!affiliatesWithStats) return [];
+     return affiliatesWithStats
+       .filter(a => a.active)
+       .slice(0, 5)
+       .map(a => ({
+         name: a.name.split(' ')[0],
+         negocios: a.total_businesses,
+         vendas: a.total_sales,
+         comissao: a.total_commission,
+       }));
+   }, [affiliatesWithStats]);
+ 
+   // Financial data over time (mock aggregation by month for now)
+   const financialData = useMemo(() => {
+     if (!affiliateSales || affiliateSales.length === 0) return [];
+     
+     // Group by month
+     const monthlyData: { [key: string]: { vendas: number; comissoes: number; lucro: number } } = {};
+     
+     affiliateSales.forEach(sale => {
+       const monthKey = format(new Date(sale.created_at), 'MMM', { locale: pt });
+       if (!monthlyData[monthKey]) {
+         monthlyData[monthKey] = { vendas: 0, comissoes: 0, lucro: 0 };
+       }
+       monthlyData[monthKey].vendas += sale.sale_value;
+       monthlyData[monthKey].comissoes += sale.commission_value;
+       monthlyData[monthKey].lucro += sale.platform_profit;
+     });
+     
+     return Object.entries(monthlyData).map(([month, data]) => ({
+       month,
+       ...data,
+     }));
+   }, [affiliateSales]);
+ 
+   // Total orders from all businesses
+   const totalOrders = useMemo(() => {
+     // This would need orders data - for now returning subscription count as placeholder
+     return subscriptions?.length || 0;
+   }, [subscriptions]);
 
   // Subscription status distribution
   const subscriptionStatusData = useMemo(() => {
@@ -84,7 +140,7 @@ const Metrics = () => {
       .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
   }, [subscriptions]);
 
-  if (isLoading) {
+   if (isLoading || isLoadingAffiliates) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -98,8 +154,90 @@ const Metrics = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground">Métricas da Plataforma</h1>
-        <p className="text-muted-foreground">Visão geral das empresas e mensalidades</p>
+         <p className="text-muted-foreground">Visão geral de empresas, afiliados e lucros</p>
       </div>
+ 
+       {/* Main KPIs - Agenda Smart Encomendas */}
+       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                 <Building2 className="w-5 h-5 text-primary" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold">{metrics.approvedActive}</p>
+                 <p className="text-xs text-muted-foreground">Negócios Ativos</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                 <ShoppingBag className="w-5 h-5 text-muted-foreground" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold">{totalOrders}</p>
+                 <p className="text-xs text-muted-foreground">Total Encomendas</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
+                 <DollarSign className="w-5 h-5 text-success" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold">{affiliateMetrics.totalSales.toLocaleString()}</p>
+                 <p className="text-xs text-muted-foreground">Total Vendas (MZN)</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
+                 <CreditCard className="w-5 h-5 text-warning" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold">{affiliateMetrics.totalCommissions.toLocaleString()}</p>
+                 <p className="text-xs text-muted-foreground">Total Comissões (MZN)</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
+                 <TrendingUp className="w-5 h-5 text-success" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold text-success">{affiliateMetrics.totalPlatformProfit.toLocaleString()}</p>
+                 <p className="text-xs text-muted-foreground">Lucro Agenda Smart (MZN)</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                 <Users className="w-5 h-5 text-accent-foreground" />
+               </div>
+               <div>
+                 <p className="text-2xl font-bold">{affiliateMetrics.activeAffiliates}</p>
+                 <p className="text-xs text-muted-foreground">Afiliados Ativos</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+       </div>
 
       {/* Key Metrics - Empresas */}
       <div>
@@ -238,6 +376,80 @@ const Metrics = () => {
         </Card>
       ) : (
         <div className="grid lg:grid-cols-2 gap-6">
+           {/* Affiliate Performance Chart */}
+           <Card>
+             <CardHeader>
+               <CardTitle className="text-lg flex items-center gap-2">
+                 <Users className="w-5 h-5 text-primary" />
+                 Afiliado × Negócios
+               </CardTitle>
+             </CardHeader>
+             <CardContent>
+               <div className="h-64">
+                 {affiliatePerformanceData.length > 0 ? (
+                   <ResponsiveContainer width="100%" height="100%">
+                     <BarChart data={affiliatePerformanceData}>
+                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                       <XAxis dataKey="name" className="text-xs" />
+                       <YAxis className="text-xs" />
+                       <Tooltip
+                         contentStyle={{
+                           backgroundColor: 'hsl(var(--card))',
+                           border: '1px solid hsl(var(--border))',
+                           borderRadius: '8px',
+                         }}
+                       />
+                       <Bar dataKey="negocios" fill="hsl(var(--primary))" name="Negócios" radius={[4, 4, 0, 0]} />
+                     </BarChart>
+                   </ResponsiveContainer>
+                 ) : (
+                   <div className="flex items-center justify-center h-full text-muted-foreground">
+                     Nenhum afiliado com dados
+                   </div>
+                 )}
+               </div>
+             </CardContent>
+           </Card>
+ 
+           {/* Financial Chart */}
+           <Card>
+             <CardHeader>
+               <CardTitle className="text-lg flex items-center gap-2">
+                 <TrendingUp className="w-5 h-5 text-success" />
+                 Financeiro (Vendas × Comissões × Lucro)
+               </CardTitle>
+             </CardHeader>
+             <CardContent>
+               <div className="h-64">
+                 {financialData.length > 0 ? (
+                   <ResponsiveContainer width="100%" height="100%">
+                     <LineChart data={financialData}>
+                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                       <XAxis dataKey="month" className="text-xs" />
+                       <YAxis className="text-xs" />
+                       <Tooltip
+                         contentStyle={{
+                           backgroundColor: 'hsl(var(--card))',
+                           border: '1px solid hsl(var(--border))',
+                           borderRadius: '8px',
+                         }}
+                         formatter={(value: number) => `${value.toLocaleString()} MZN`}
+                       />
+                       <Legend />
+                       <Line type="monotone" dataKey="vendas" stroke="hsl(var(--primary))" name="Vendas" strokeWidth={2} />
+                       <Line type="monotone" dataKey="comissoes" stroke="hsl(var(--warning))" name="Comissões" strokeWidth={2} />
+                       <Line type="monotone" dataKey="lucro" stroke="hsl(var(--success))" name="Lucro" strokeWidth={2} />
+                     </LineChart>
+                   </ResponsiveContainer>
+                 ) : (
+                   <div className="flex items-center justify-center h-full text-muted-foreground">
+                     Nenhuma venda registada
+                   </div>
+                 )}
+               </div>
+             </CardContent>
+           </Card>
+ 
           {/* Business Status Distribution */}
           <Card>
             <CardHeader>

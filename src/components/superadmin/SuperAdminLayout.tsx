@@ -8,7 +8,8 @@ import {
   BarChart3, 
   LogOut,
   Menu,
-  X
+   X,
+   Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,7 @@ import { useState } from 'react';
 const navItems = [
   { path: '/superadmin', label: 'Empresas', icon: Building2 },
   { path: '/superadmin/mensalidades', label: 'Mensalidades', icon: CreditCard },
+   { path: '/superadmin/afiliados', label: 'Afiliados', icon: Users },
   { path: '/superadmin/metricas', label: 'Métricas', icon: BarChart3 },
 ];
 
