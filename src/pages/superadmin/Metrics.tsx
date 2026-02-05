@@ -549,37 +549,6 @@ const Metrics = () => {
         </div>
       )}
 
-      {/* Upcoming Due Subscriptions */}
-      {upcomingDue.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              Mensalidades a Vencer (próximos 7 dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingDue.map((sub) => (
-                <div 
-                  key={sub.id} 
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{sub.business?.name || 'Empresa'}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Vence em {format(new Date(sub.due_date), "dd 'de' MMMM", { locale: pt })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{sub.amount.toLocaleString()} {sub.currency}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
