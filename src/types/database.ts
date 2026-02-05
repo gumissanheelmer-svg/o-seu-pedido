@@ -4,6 +4,7 @@ export type BusinessType = 'lanchonete' | 'bolos' | 'buques' | 'restaurante' | '
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'blocked';
 export type SubscriptionStatus = 'active' | 'pending' | 'overdue' | 'cancelled';
+export type SubscriptionPlan = 'starter' | 'pro' | 'premium';
 export type AppRole = 'super_admin' | 'admin';
 export type PaymentMethod = 'mpesa' | 'emola' | null;
 
@@ -166,4 +167,23 @@ export const orderStatusColors: Record<OrderStatus, string> = {
 export const paymentMethodLabels: Record<string, string> = {
   mpesa: 'M-Pesa',
   emola: 'e-Mola',
+};
+
+export const subscriptionPlanLabels: Record<SubscriptionPlan, string> = {
+  starter: 'Starter',
+  pro: 'Pro',
+  premium: 'Premium',
+};
+
+export const subscriptionPlanPrices: Record<SubscriptionPlan, number> = {
+  starter: 500,
+  pro: 1500,
+  premium: 3000,
+};
+
+export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
+  active: 'Ativo',
+  pending: 'Pendente',
+  overdue: 'Atrasado',
+  cancelled: 'Cancelado',
 };

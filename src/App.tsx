@@ -67,7 +67,7 @@ const App = () => (
           {/* Super Admin Routes */}
           <Route path="/superadmin" element={<SuperAdminLayout />}>
             <Route index element={<Businesses />} />
-            <Route path="mensalidades" element={<Subscriptions />} />
+            <Route path="assinaturas" element={<Subscriptions />} />
             <Route path="metricas" element={<Metrics />} />
              <Route path="afiliados" element={<Affiliates />} />
           </Route>

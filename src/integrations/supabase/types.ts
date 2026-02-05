@@ -675,39 +675,61 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          affiliate_id: string | null
           amount: number
           business_id: string
           created_at: string
           currency: string
           due_date: string
           id: string
+          internal_notes: string | null
+          next_billing_date: string | null
           paid_at: string | null
+          plan: Database["public"]["Enums"]["subscription_plan"] | null
+          start_date: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
         }
         Insert: {
+          affiliate_id?: string | null
           amount?: number
           business_id: string
           created_at?: string
           currency?: string
           due_date: string
           id?: string
+          internal_notes?: string | null
+          next_billing_date?: string | null
           paid_at?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"] | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
         }
         Update: {
+          affiliate_id?: string | null
           amount?: number
           business_id?: string
           created_at?: string
           currency?: string
           due_date?: string
           id?: string
+          internal_notes?: string | null
+          next_billing_date?: string | null
           paid_at?: string | null
+          plan?: Database["public"]["Enums"]["subscription_plan"] | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_business_id_fkey"
             columns: ["business_id"]
@@ -811,6 +833,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_subscription_active: {
+        Args: { business_uuid: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin_email: { Args: { _email: string }; Returns: boolean }
     }
@@ -833,7 +859,13 @@ export type Database = {
         | "ready"
         | "delivered"
         | "cancelled"
-      subscription_status: "active" | "pending" | "overdue" | "cancelled"
+      subscription_plan: "starter" | "pro" | "premium"
+      subscription_status:
+        | "active"
+        | "pending"
+        | "overdue"
+        | "cancelled"
+        | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -981,7 +1013,14 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
-      subscription_status: ["active", "pending", "overdue", "cancelled"],
+      subscription_plan: ["starter", "pro", "premium"],
+      subscription_status: [
+        "active",
+        "pending",
+        "overdue",
+        "cancelled",
+        "suspended",
+      ],
     },
   },
 } as const
