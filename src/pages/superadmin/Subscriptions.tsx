@@ -58,9 +58,9 @@ import {
 } from '@/types/database';
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
-  pending: { label: 'Pendente', color: 'bg-warning/20 text-warning', icon: Clock },
-  active: { label: 'Ativo', color: 'bg-success/20 text-success', icon: CheckCircle2 },
-  overdue: { label: 'Atrasado', color: 'bg-destructive/20 text-destructive', icon: AlertTriangle },
+  pending: { label: 'Ativação Pendente', color: 'bg-warning/20 text-warning', icon: Clock },
+  active: { label: 'Ativada', color: 'bg-success/20 text-success', icon: CheckCircle2 },
+  overdue: { label: 'Bloqueada', color: 'bg-destructive/20 text-destructive', icon: AlertTriangle },
   cancelled: { label: 'Cancelado', color: 'bg-muted text-muted-foreground', icon: Ban },
   suspended: { label: 'Suspenso', color: 'bg-destructive/20 text-destructive', icon: AlertCircle },
 };
@@ -169,12 +169,12 @@ const Subscriptions = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Assinaturas</h1>
-          <p className="text-muted-foreground">Gerencie as assinaturas e planos das empresas</p>
+           <h1 className="text-2xl font-display font-bold text-foreground">Ativações</h1>
+           <p className="text-muted-foreground">Gerencie as ativações das empresas</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)} disabled={businessesWithoutSub.length === 0}>
           <Plus className="w-4 h-4 mr-2" />
-          Nova Assinatura
+          Nova Ativação
         </Button>
       </div>
 
@@ -188,7 +188,7 @@ const Subscriptions = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.activeSubscriptions}</p>
-                <p className="text-xs text-muted-foreground">Ativos</p>
+                 <p className="text-xs text-muted-foreground">Ativadas</p>
               </div>
             </div>
           </CardContent>
@@ -201,7 +201,7 @@ const Subscriptions = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.pendingSubscriptions}</p>
-                <p className="text-xs text-muted-foreground">Pendentes</p>
+                 <p className="text-xs text-muted-foreground">Ativações Pendentes</p>
               </div>
             </div>
           </CardContent>
@@ -214,7 +214,7 @@ const Subscriptions = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.overdueRevenue.toLocaleString()} MZN</p>
-                <p className="text-xs text-muted-foreground">Em Atraso</p>
+                 <p className="text-xs text-muted-foreground">Bloqueadas</p>
               </div>
             </div>
           </CardContent>
@@ -227,7 +227,7 @@ const Subscriptions = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{metrics.totalRevenue.toLocaleString()} MZN</p>
-                <p className="text-xs text-muted-foreground">Receita Mensal</p>
+                 <p className="text-xs text-muted-foreground">Receita de Ativações</p>
               </div>
             </div>
           </CardContent>
@@ -253,10 +253,10 @@ const Subscriptions = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="pending">Pendentes</SelectItem>
-              <SelectItem value="overdue">Atrasados</SelectItem>
-              <SelectItem value="cancelled">Cancelados</SelectItem>
+               <SelectItem value="active">Ativadas</SelectItem>
+               <SelectItem value="pending">Ativações Pendentes</SelectItem>
+               <SelectItem value="overdue">Bloqueadas</SelectItem>
+               <SelectItem value="cancelled">Cancelados</SelectItem>
             </SelectContent>
           </Select>
           <Select value={planFilter} onValueChange={setPlanFilter}>
@@ -278,8 +278,8 @@ const Subscriptions = () => {
         {filteredSubscriptions.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <Receipt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma assinatura encontrada</p>
+             <Receipt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+               <p className="text-muted-foreground">Nenhuma ativação encontrada</p>
             </CardContent>
           </Card>
         ) : (
@@ -358,22 +358,22 @@ const Subscriptions = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => openEditDialog(subscription)}>
-                            <FileText className="w-4 h-4 mr-2" />
-                            Editar Assinatura
-                          </DropdownMenuItem>
+                             <FileText className="w-4 h-4 mr-2" />
+                             Editar Ativação
+                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {subscription.status !== 'active' && (
-                            <DropdownMenuItem onClick={() => handleMarkAsPaid(subscription.id)}>
-                              <CheckCircle2 className="w-4 h-4 mr-2 text-success" />
-                              Marcar como Ativo
-                            </DropdownMenuItem>
-                          )}
-                          {subscription.status === 'active' && (
-                            <DropdownMenuItem onClick={() => handleSuspend(subscription.id)} className="text-destructive">
-                              <Ban className="w-4 h-4 mr-2" />
-                              Suspender
-                            </DropdownMenuItem>
-                          )}
+           {subscription.status !== 'active' && (
+                             <DropdownMenuItem onClick={() => handleMarkAsPaid(subscription.id)}>
+                               <CheckCircle2 className="w-4 h-4 mr-2 text-success" />
+                               Marcar como Ativada
+                             </DropdownMenuItem>
+                           )}
+                           {subscription.status === 'active' && (
+                             <DropdownMenuItem onClick={() => handleSuspend(subscription.id)} className="text-destructive">
+                               <Ban className="w-4 h-4 mr-2" />
+                               Bloquear
+                             </DropdownMenuItem>
+                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -387,13 +387,13 @@ const Subscriptions = () => {
 
       {/* Create Subscription Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Nova Assinatura</DialogTitle>
-            <DialogDescription>
-              Crie uma assinatura para uma empresa aprovada
-            </DialogDescription>
-          </DialogHeader>
+         <DialogContent className="max-w-lg">
+           <DialogHeader>
+             <DialogTitle>Nova Ativação</DialogTitle>
+             <DialogDescription>
+               Crie uma ativação para uma empresa aprovada
+             </DialogDescription>
+           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Empresa</Label>
@@ -482,8 +482,8 @@ const Subscriptions = () => {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateSubscription}>
-              Criar Assinatura
+             <Button onClick={handleCreateSubscription}>
+               Criar Ativação
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -493,7 +493,7 @@ const Subscriptions = () => {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar Assinatura</DialogTitle>
+             <DialogTitle>Editar Ativação</DialogTitle>
             <DialogDescription>
               {selectedSubscription?.business?.name}
             </DialogDescription>
