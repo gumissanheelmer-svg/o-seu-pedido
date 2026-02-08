@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, ShoppingCart, Check, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, ChevronLeft, ChevronRight, Play, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -56,12 +56,14 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, SelectedOption>>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [isAdded, setIsAdded] = useState(false);
   const { addItem } = useCartContext();
 
   if (!product) return null;
 
   const options = product.options || [];
   const media = getProductMedia(product);
+  const primaryColor = '#C9A24D'; // Default gold
   
   const calculateTotalPrice = () => {
     const basePrice = product.price;
@@ -99,19 +101,26 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
     }
 
     addItem(product, Object.values(selectedOptions), quantity);
-    toast.success('Adicionado ao carrinho!');
     
-    // Reset and close
-    setQuantity(1);
-    setSelectedOptions({});
-    setCurrentMediaIndex(0);
-    onClose();
+    // Show success animation
+    setIsAdded(true);
+    setTimeout(() => {
+      setIsAdded(false);
+      // Reset and close
+      setQuantity(1);
+      setSelectedOptions({});
+      setCurrentMediaIndex(0);
+      onClose();
+    }, 800);
+    
+    toast.success('Adicionado ao carrinho!');
   };
 
   const handleClose = () => {
     setQuantity(1);
     setSelectedOptions({});
     setCurrentMediaIndex(0);
+    setIsAdded(false);
     onClose();
   };
 
@@ -127,18 +136,19 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden glass-strong border-white/10">
         <ScrollArea className="max-h-[90vh]">
           <div className="p-6">
             {/* Media Gallery */}
             {media.length > 0 && (
-              <div className="relative aspect-video bg-muted rounded-lg overflow-hidden -mx-6 -mt-6 mb-4">
+              <div className="relative aspect-video bg-muted/30 rounded-xl overflow-hidden -mx-6 -mt-6 mb-4">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentMediaIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
                     className="w-full h-full"
                   >
                     {currentMedia?.type === 'video' ? (
@@ -161,24 +171,24 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                 {/* Navigation Arrows */}
                 {media.length > 1 && (
                   <>
-                    <Button
+                    <motion.button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 glass rounded-full w-8 h-8 flex items-center justify-center"
                       onClick={() => navigateMedia('prev')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       <ChevronLeft className="w-5 h-5" />
-                    </Button>
-                    <Button
+                    </motion.button>
+                    <motion.button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 glass rounded-full w-8 h-8 flex items-center justify-center"
                       onClick={() => navigateMedia('next')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       <ChevronRight className="w-5 h-5" />
-                    </Button>
+                    </motion.button>
                   </>
                 )}
 
@@ -188,16 +198,18 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                     {media.length <= 6 ? (
                       // Show thumbnails for small galleries
                       media.map((m, index) => (
-                        <button
+                        <motion.button
                           key={index}
                           type="button"
                           className={cn(
                             "w-10 h-10 rounded-lg overflow-hidden border-2 transition-all",
                             index === currentMediaIndex 
-                              ? "border-white shadow-lg scale-110" 
+                              ? "border-white shadow-lg" 
                               : "border-transparent opacity-70 hover:opacity-100"
                           )}
                           onClick={() => setCurrentMediaIndex(index)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           {m.type === 'video' ? (
                             <div className="w-full h-full bg-black/80 flex items-center justify-center">
@@ -210,7 +222,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                               className="w-full h-full object-cover"
                             />
                           )}
-                        </button>
+                        </motion.button>
                       ))
                     ) : (
                       // Show dots for larger galleries
@@ -234,14 +246,17 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
             )}
 
             <DialogHeader>
-              <DialogTitle className="text-xl">{product.name}</DialogTitle>
+              <DialogTitle className="text-xl text-foreground">{product.name}</DialogTitle>
             </DialogHeader>
 
             {product.description && (
               <p className="text-muted-foreground text-sm mt-2">{product.description}</p>
             )}
 
-            <p className="text-2xl font-bold text-primary mt-3">
+            <p 
+              className="text-2xl font-bold mt-3"
+              style={{ color: primaryColor }}
+            >
               {formatCurrency(product.price)}
             </p>
 
@@ -264,10 +279,12 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                         className="space-y-2"
                       >
                         {option.values?.map((value) => (
-                          <div
+                          <motion.div
                             key={value.id}
-                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                            className="flex items-center justify-between p-3 border border-white/10 rounded-xl glass hover:bg-white/5 cursor-pointer"
                             onClick={() => handleOptionChange(option, value.id)}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
                           >
                             <div className="flex items-center gap-3">
                               <RadioGroupItem value={value.id} id={value.id} />
@@ -281,7 +298,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                                 {formatCurrency(value.price_adjustment)}
                               </span>
                             )}
-                          </div>
+                          </motion.div>
                         ))}
                       </RadioGroup>
                     )}
@@ -289,9 +306,11 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                     {option.type === 'checkbox' && (
                       <div className="space-y-2">
                         {option.values?.map((value) => (
-                          <div
+                          <motion.div
                             key={value.id}
-                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                            className="flex items-center justify-between p-3 border border-white/10 rounded-xl glass hover:bg-white/5"
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
                           >
                             <div className="flex items-center gap-3">
                               <Checkbox
@@ -318,7 +337,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
                                 +{formatCurrency(value.price_adjustment)}
                               </span>
                             )}
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     )}
@@ -327,35 +346,77 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
               </div>
             )}
 
-            <Separator className="my-4" />
+            <Separator className="my-4 bg-white/10" />
 
             {/* Quantity */}
             <div className="flex items-center justify-between">
               <Label>Quantidade</Label>
               <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
+                <motion.button
+                  className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Minus className="w-4 h-4" />
-                </Button>
-                <span className="text-lg font-medium w-8 text-center">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
+                </motion.button>
+                <motion.span 
+                  key={quantity}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className="text-lg font-medium w-8 text-center"
+                >
+                  {quantity}
+                </motion.span>
+                <motion.button
+                  className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
                   onClick={() => setQuantity(q => q + 1)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Plus className="w-4 h-4" />
-                </Button>
+                </motion.button>
               </div>
             </div>
 
             {/* Add to Cart */}
-            <Button className="w-full h-12 text-base mt-4" onClick={handleAddToCart}>
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Adicionar • {formatCurrency(calculateTotalPrice())}
-            </Button>
+            <motion.button 
+              className="w-full h-12 text-base mt-4 rounded-xl font-semibold ripple relative overflow-hidden flex items-center justify-center gap-2"
+              style={{ 
+                backgroundColor: isAdded ? 'hsl(145 60% 42%)' : primaryColor,
+                color: 'hsl(225 25% 6%)',
+                boxShadow: `0 0 30px -5px ${isAdded ? 'hsl(145 60% 42%)' : primaryColor}60`,
+              }}
+              onClick={handleAddToCart}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <AnimatePresence mode="wait">
+                {isAdded ? (
+                  <motion.span
+                    key="check"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    Adicionado!
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="add"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Adicionar • {formatCurrency(calculateTotalPrice())}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
         </ScrollArea>
       </DialogContent>

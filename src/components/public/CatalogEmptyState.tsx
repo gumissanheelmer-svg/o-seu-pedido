@@ -1,5 +1,5 @@
+import { motion } from 'framer-motion';
 import { Cake, MessageCircle, Package, Flower2, Gift } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Business } from '@/types/database';
 
 interface CatalogEmptyStateProps {
@@ -58,38 +58,94 @@ export function CatalogEmptyState({ business }: CatalogEmptyStateProps) {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16">
+    <motion.div 
+      className="flex-1 flex items-center justify-center px-4 py-12 sm:py-16"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2 }}
+    >
       <div className="text-center max-w-sm">
-        {/* Icon with background */}
-        <div 
-          className="inline-flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32 rounded-3xl mb-6"
+        {/* Icon with background and floating animation */}
+        <motion.div 
+          className="inline-flex items-center justify-center w-28 h-28 sm:w-32 sm:h-32 rounded-3xl mb-6 glass relative"
           style={{ 
-            backgroundColor: `${primaryColor}15`,
+            borderColor: `${primaryColor}30`,
             color: primaryColor 
           }}
+          animate={{
+            y: [0, -10, 0],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
         >
-          {icon}
-        </div>
+          {/* Glow effect */}
+          <motion.div
+            className="absolute inset-0 rounded-3xl blur-2xl opacity-30"
+            style={{ backgroundColor: primaryColor }}
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+          <span className="relative z-10">{icon}</span>
+        </motion.div>
 
         {/* Message */}
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+        <motion.h2 
+          className="text-xl sm:text-2xl font-bold text-foreground mb-2"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
           {message.title}
-        </h2>
-        <p className="text-muted-foreground text-sm sm:text-base mb-8">
+        </motion.h2>
+        <motion.p 
+          className="text-muted-foreground text-sm sm:text-base mb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           {message.subtitle}
-        </p>
+        </motion.p>
 
         {/* CTA Button */}
-        <Button
-          size="lg"
-          className="gap-2 text-white shadow-lg hover:shadow-xl transition-shadow"
-          style={{ backgroundColor: primaryColor }}
+        <motion.button
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-base ripple relative overflow-hidden"
+          style={{ 
+            backgroundColor: primaryColor,
+            color: 'hsl(225 25% 6%)',
+            boxShadow: `0 0 40px -5px ${primaryColor}60`,
+          }}
           onClick={handleWhatsAppClick}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <MessageCircle className="w-5 h-5" />
-          Falar no WhatsApp
-        </Button>
+          {/* Shimmer */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -skew-x-12"
+            animate={{ x: ['-200%', '200%'] }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              repeatDelay: 3,
+            }}
+          />
+          <MessageCircle className="w-5 h-5 relative z-10" />
+          <span className="relative z-10">Falar no WhatsApp</span>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

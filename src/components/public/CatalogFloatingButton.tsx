@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, MessageCircle, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/lib/whatsapp';
+import { PingIndicator } from './animations/MotionComponents';
 import {
   Tooltip,
   TooltipContent,
@@ -29,7 +30,8 @@ export function CatalogFloatingButton({
   hasWhatsApp = true,
 }: CatalogFloatingButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [showPing, setShowPing] = useState(false);
+  const prevItemsRef = useRef(totalItems);
 
   // Show tooltip on first load for 3 seconds
   useEffect(() => {
@@ -46,8 +48,17 @@ export function CatalogFloatingButton({
     }
   }, []);
 
+  // Ping animation when items added
+  useEffect(() => {
+    if (totalItems > prevItemsRef.current) {
+      setShowPing(true);
+      const timer = setTimeout(() => setShowPing(false), 1000);
+      return () => clearTimeout(timer);
+    }
+    prevItemsRef.current = totalItems;
+  }, [totalItems]);
+
   const handleClick = () => {
-    setHasInteracted(true);
     if (totalItems > 0) {
       onCartClick();
     } else if (onWhatsAppClick) {
@@ -61,14 +72,10 @@ export function CatalogFloatingButton({
   }
 
   const isCartMode = totalItems > 0;
-  const buttonLabel = isCartMode 
-    ? `Ver Carrinho (${totalItems})` 
-    : 'Encomendar agora';
 
   return (
     <TooltipProvider>
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 safe-area-inset-bottom">
-        {/* Floating pill button when cart has items */}
         <AnimatePresence mode="wait">
           {isCartMode ? (
             <motion.div
@@ -79,16 +86,30 @@ export function CatalogFloatingButton({
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="relative"
             >
+              {/* Ping effect on add */}
+              <AnimatePresence>
+                {showPing && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{ backgroundColor: primaryColor }}
+                    initial={{ scale: 1, opacity: 0.8 }}
+                    animate={{ scale: 2, opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6 }}
+                  />
+                )}
+              </AnimatePresence>
+              
               {/* Glow effect background */}
               <motion.div
-                className="absolute inset-0 rounded-full blur-xl opacity-40"
+                className="absolute -inset-2 rounded-full blur-2xl opacity-40"
                 style={{ backgroundColor: primaryColor }}
                 animate={{
                   scale: [1, 1.2, 1],
                   opacity: [0.3, 0.5, 0.3],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 3,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
@@ -97,9 +118,10 @@ export function CatalogFloatingButton({
               {/* Main pill button */}
               <motion.button
                 onClick={handleClick}
-                className="relative flex items-center gap-3 px-6 py-4 rounded-full text-white font-semibold shadow-2xl overflow-hidden"
+                className="relative flex items-center gap-3 px-6 py-4 rounded-full font-semibold shadow-2xl overflow-hidden"
                 style={{
-                  background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
+                  background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -25)} 100%)`,
+                  color: 'hsl(225 25% 6%)',
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -109,29 +131,39 @@ export function CatalogFloatingButton({
                 
                 {/* Shimmer effect */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -skew-x-12"
                   animate={{ x: ['-200%', '200%'] }}
                   transition={{
-                    duration: 3,
+                    duration: 2.5,
                     repeat: Infinity,
                     ease: 'easeInOut',
-                    repeatDelay: 2,
+                    repeatDelay: 4,
                   }}
                 />
                 
                 {/* Content */}
                 <div className="relative flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                  </motion.div>
-                  <span className="text-base">
-                    Ver Carrinho ({totalItems})
-                  </span>
-                  <span className="text-sm opacity-90">
-                    • {formatCurrency(totalAmount)}
+                  <div className="relative">
+                    <motion.div
+                      animate={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                    </motion.div>
+                    
+                    {/* Item count badge */}
+                    <motion.span
+                      key={totalItems}
+                      initial={{ scale: 0.5 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-white text-xs font-bold flex items-center justify-center"
+                      style={{ color: primaryColor }}
+                    >
+                      {totalItems}
+                    </motion.span>
+                  </div>
+                  <span className="text-base font-bold">
+                    {formatCurrency(totalAmount)}
                   </span>
                 </div>
               </motion.button>
@@ -151,26 +183,26 @@ export function CatalogFloatingButton({
                   {/* Floating animation wrapper */}
                   <motion.div
                     animate={{
-                      y: [0, -6, 0],
+                      y: [0, -8, 0],
                     }}
                     transition={{
-                      duration: 3,
+                      duration: 4,
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
                   >
                     {/* Outer glow ring */}
                     <motion.div
-                      className="absolute inset-0 rounded-full"
+                      className="absolute -inset-4 rounded-full"
                       style={{
-                        background: `radial-gradient(circle, ${primaryColor}40 0%, transparent 70%)`,
+                        background: `radial-gradient(circle, ${primaryColor}30 0%, transparent 70%)`,
                       }}
                       animate={{
-                        scale: [1, 1.5, 1],
-                        opacity: [0.6, 0.2, 0.6],
+                        scale: [1, 1.3, 1],
+                        opacity: [0.5, 0.2, 0.5],
                       }}
                       transition={{
-                        duration: 2,
+                        duration: 3,
                         repeat: Infinity,
                         ease: 'easeInOut',
                       }}
@@ -181,11 +213,11 @@ export function CatalogFloatingButton({
                       className="absolute inset-0 rounded-full border-2"
                       style={{ borderColor: primaryColor }}
                       animate={{
-                        scale: [1, 1.8],
-                        opacity: [0.8, 0],
+                        scale: [1, 2],
+                        opacity: [0.6, 0],
                       }}
                       transition={{
-                        duration: 1.5,
+                        duration: 2,
                         repeat: Infinity,
                         ease: 'easeOut',
                       }}
@@ -218,11 +250,11 @@ export function CatalogFloatingButton({
                       <motion.div
                         className="absolute top-2 right-2"
                         animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [0.8, 1, 0.8],
+                          scale: [1, 1.3, 1],
+                          opacity: [0.7, 1, 0.7],
                         }}
                         transition={{
-                          duration: 1.5,
+                          duration: 2,
                           repeat: Infinity,
                           ease: 'easeInOut',
                         }}
@@ -238,30 +270,17 @@ export function CatalogFloatingButton({
                           <ShoppingCart className="w-7 h-7 text-white" />
                         )}
                       </div>
-
-                      {/* Ripple effect on click */}
-                      <AnimatePresence>
-                        {hasInteracted && (
-                          <motion.div
-                            className="absolute inset-0 rounded-full bg-white/30"
-                            initial={{ scale: 0, opacity: 1 }}
-                            animate={{ scale: 2, opacity: 0 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.4 }}
-                          />
-                        )}
-                      </AnimatePresence>
                     </motion.button>
                   </motion.div>
                 </motion.div>
               </TooltipTrigger>
               <TooltipContent 
                 side="left" 
-                className="bg-foreground text-background px-4 py-2 rounded-xl font-medium shadow-xl"
+                className="glass-strong text-white px-4 py-2 rounded-xl font-medium shadow-xl border-white/10"
               >
                 <div className="flex items-center gap-2">
                   <span>Encomendar agora</span>
-                  <span>💬</span>
+                  <span>✨</span>
                 </div>
               </TooltipContent>
             </Tooltip>
