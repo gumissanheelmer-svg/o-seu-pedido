@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, Clock, MapPin, User, Phone, FileText, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, User, Phone, FileText, MessageCircle } from 'lucide-react';
 import { format, addHours, isBefore, startOfDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,13 @@ import { Business } from '@/types/database';
 import { formatCurrency, generateOrderMessage, sanitizePhoneNumber } from '@/lib/whatsapp';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { 
+  slideHorizontal, 
+  AnimatedCheck, 
+  CelebrationParticles,
+  shakeAnimation,
+  MagneticButton 
+} from './animations/MotionComponents';
 
 interface CheckoutFlowProps {
   business: Business;
@@ -35,11 +42,19 @@ interface CheckoutData {
   notes: string;
 }
 
+// Step transition direction tracker
+type Direction = 'left' | 'right';
+
 export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps) {
   const { items, totalAmount, clearCart } = useCartContext();
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState<Direction>('right');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderCreated, setOrderCreated] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  
+  const primaryColor = business.primary_color || '#C9A24D';
   
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     clientName: '',
@@ -59,7 +74,32 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
     return isBefore(date, minDate);
   };
 
+  const goToStep = (newStep: number) => {
+    setDirection(newStep > step ? 'right' : 'left');
+    setStep(newStep);
+  };
+
+  const validateStep1 = () => {
+    const errors: Record<string, boolean> = {};
+    if (!checkoutData.clientName) errors.clientName = true;
+    if (!checkoutData.clientPhone) errors.clientPhone = true;
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const errors: Record<string, boolean> = {};
+    if (!checkoutData.deliveryDate) errors.deliveryDate = true;
+    if (checkoutData.fulfillmentType === 'delivery' && !checkoutData.deliveryAddress) {
+      errors.deliveryAddress = true;
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmitOrder = async () => {
+    if (!validateStep2()) return;
+    
     setIsSubmitting(true);
     
     try {
@@ -115,7 +155,9 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
       if (itemsError) throw itemsError;
 
       setOrderCreated(true);
-      setStep(3);
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 1500);
+      goToStep(3);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Erro ao registar encomenda. Tente novamente.');
@@ -163,12 +205,17 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
     (checkoutData.fulfillmentType === 'pickup' || checkoutData.deliveryAddress);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen theme-premium-dark bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+      <header className="sticky top-0 z-50 glass border-b border-white/10">
         <div className="container max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onBack}
+              className="hover:bg-white/10"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -181,87 +228,117 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
         </div>
       </header>
 
-      {/* Steps Indicator */}
+      {/* Animated Progress Bar */}
       <div className="container max-w-lg mx-auto px-4 py-4">
         <div className="flex items-center justify-center gap-2">
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-2 flex-1 max-w-16 rounded-full ${
-                s <= step ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
+            <div key={s} className="relative h-2 flex-1 max-w-16 rounded-full bg-muted/30 overflow-hidden">
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: s <= step ? 1 : 0 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                style={{ originX: 0, backgroundColor: primaryColor }}
+              />
+            </div>
           ))}
         </div>
       </div>
 
       {/* Content */}
       <main className="container max-w-lg mx-auto px-4 pb-24">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {step === 1 && (
             <motion.div
               key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              variants={slideHorizontal(direction)}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="space-y-6"
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
+              <Card className="glass-card border-white/10 overflow-hidden">
+                <CardHeader className="border-b border-white/5">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <User className="w-5 h-5" style={{ color: primaryColor }} />
                     Seus Dados
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
+                <CardContent className="space-y-4 p-6">
+                  <motion.div 
+                    className="space-y-2"
+                    animate={fieldErrors.clientName ? shakeAnimation.shake : {}}
+                  >
                     <Label htmlFor="name">Nome completo *</Label>
                     <Input
                       id="name"
                       value={checkoutData.clientName}
-                      onChange={(e) => setCheckoutData({ ...checkoutData, clientName: e.target.value })}
+                      onChange={(e) => {
+                        setCheckoutData({ ...checkoutData, clientName: e.target.value });
+                        setFieldErrors({ ...fieldErrors, clientName: false });
+                      }}
                       placeholder="Seu nome"
+                      className={`bg-white/5 border-white/10 focus:border-primary focus-ring-gold ${
+                        fieldErrors.clientName ? 'border-destructive' : ''
+                      }`}
                     />
-                  </div>
-                  <div className="space-y-2">
+                  </motion.div>
+                  <motion.div 
+                    className="space-y-2"
+                    animate={fieldErrors.clientPhone ? shakeAnimation.shake : {}}
+                  >
                     <Label htmlFor="phone">Telefone *</Label>
                     <Input
                       id="phone"
                       type="tel"
                       value={checkoutData.clientPhone}
-                      onChange={(e) => setCheckoutData({ ...checkoutData, clientPhone: e.target.value })}
+                      onChange={(e) => {
+                        setCheckoutData({ ...checkoutData, clientPhone: e.target.value });
+                        setFieldErrors({ ...fieldErrors, clientPhone: false });
+                      }}
                       placeholder="84 000 0000"
+                      className={`bg-white/5 border-white/10 focus:border-primary focus-ring-gold ${
+                        fieldErrors.clientPhone ? 'border-destructive' : ''
+                      }`}
                     />
-                  </div>
+                  </motion.div>
                 </CardContent>
               </Card>
 
-              <Button
-                className="w-full h-12"
+              <MagneticButton
+                className="w-full h-12 rounded-xl font-semibold text-base ripple"
+                style={{ 
+                  backgroundColor: primaryColor, 
+                  color: 'hsl(225 25% 6%)',
+                  boxShadow: `0 0 30px -5px ${primaryColor}60`,
+                }}
                 disabled={!canProceedStep1}
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (validateStep1()) goToStep(2);
+                }}
               >
                 Continuar
-              </Button>
+              </MagneticButton>
             </motion.div>
           )}
 
           {step === 2 && (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              variants={slideHorizontal(direction)}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="space-y-6"
             >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5" />
+              <Card className="glass-card border-white/10 overflow-hidden">
+                <CardHeader className="border-b border-white/5">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MapPin className="w-5 h-5" style={{ color: primaryColor }} />
                     Entrega
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-6">
                   <RadioGroup
                     value={checkoutData.fulfillmentType}
                     onValueChange={(value) => setCheckoutData({ 
@@ -270,7 +347,11 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                     })}
                     className="space-y-3"
                   >
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <motion.div 
+                      className="flex items-center space-x-3 p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
                       <RadioGroupItem value="pickup" id="pickup" />
                       <Label htmlFor="pickup" className="flex-1 cursor-pointer">
                         <div className="font-medium">Retirar no local</div>
@@ -278,8 +359,12 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                           {business.address || 'Endereço não informado'}
                         </div>
                       </Label>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center space-x-3 p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
                       <RadioGroupItem value="delivery" id="delivery" />
                       <Label htmlFor="delivery" className="flex-1 cursor-pointer">
                         <div className="font-medium">Entrega</div>
@@ -287,31 +372,39 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                           Informe o endereço de entrega
                         </div>
                       </Label>
-                    </div>
+                    </motion.div>
                   </RadioGroup>
 
-                  {checkoutData.fulfillmentType === 'delivery' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Endereço de entrega *</Label>
-                      <Textarea
-                        id="address"
-                        value={checkoutData.deliveryAddress}
-                        onChange={(e) => setCheckoutData({ ...checkoutData, deliveryAddress: e.target.value })}
-                        placeholder="Rua, número, bairro..."
-                      />
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {checkoutData.fulfillmentType === 'delivery' && (
+                      <motion.div 
+                        className="space-y-2"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <Label htmlFor="address">Endereço de entrega *</Label>
+                        <Textarea
+                          id="address"
+                          value={checkoutData.deliveryAddress}
+                          onChange={(e) => setCheckoutData({ ...checkoutData, deliveryAddress: e.target.value })}
+                          placeholder="Rua, número, bairro..."
+                          className="bg-white/5 border-white/10 focus:border-primary"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
+              <Card className="glass-card border-white/10 overflow-hidden">
+                <CardHeader className="border-b border-white/5">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Calendar className="w-5 h-5" style={{ color: primaryColor }} />
                     Data e Hora
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-6">
                   <div className="flex justify-center">
                     <CalendarComponent
                       mode="single"
@@ -319,6 +412,7 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                       onSelect={(date) => setCheckoutData({ ...checkoutData, deliveryDate: date })}
                       disabled={isDateDisabled}
                       locale={pt}
+                      className="rounded-xl border border-white/10 bg-white/5 p-3 pointer-events-auto"
                     />
                   </div>
                   <div className="space-y-2">
@@ -328,6 +422,7 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                       type="time"
                       value={checkoutData.deliveryTime}
                       onChange={(e) => setCheckoutData({ ...checkoutData, deliveryTime: e.target.value })}
+                      className="bg-white/5 border-white/10"
                     />
                     <p className="text-xs text-muted-foreground">
                       Mínimo de {maxPrepHours}h de antecedência para preparação
@@ -336,34 +431,44 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
+              <Card className="glass-card border-white/10 overflow-hidden">
+                <CardHeader className="border-b border-white/5">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <FileText className="w-5 h-5" style={{ color: primaryColor }} />
                     Observações
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <Textarea
                     value={checkoutData.notes}
                     onChange={(e) => setCheckoutData({ ...checkoutData, notes: e.target.value })}
                     placeholder="Alguma observação especial?"
                     rows={3}
+                    className="bg-white/5 border-white/10"
                   />
                 </CardContent>
               </Card>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+                <Button 
+                  variant="outline" 
+                  onClick={() => goToStep(1)} 
+                  className="flex-1 border-white/10 bg-white/5 hover:bg-white/10"
+                >
                   Voltar
                 </Button>
-                <Button
-                  className="flex-1"
+                <MagneticButton
+                  className="flex-1 h-12 rounded-xl font-semibold ripple"
+                  style={{ 
+                    backgroundColor: primaryColor, 
+                    color: 'hsl(225 25% 6%)',
+                    boxShadow: `0 0 30px -5px ${primaryColor}60`,
+                  }}
                   disabled={!canProceedStep2 || isSubmitting}
                   onClick={handleSubmitOrder}
                 >
                   {isSubmitting ? 'Registando...' : 'Confirmar Encomenda'}
-                </Button>
+                </MagneticButton>
               </div>
             </motion.div>
           )}
@@ -371,94 +476,170 @@ export function CheckoutFlow({ business, onBack, onComplete }: CheckoutFlowProps
           {step === 3 && (
             <motion.div
               key="step3"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              variants={slideHorizontal('right')}
+              initial="hidden"
+              animate="visible"
               className="space-y-6"
             >
-              <div className="text-center py-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', delay: 0.2 }}
-                  className="w-20 h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4"
-                >
-                  <Check className="w-10 h-10 text-success" />
-                </motion.div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Encomenda Registada!
-                </h2>
-                <p className="text-muted-foreground">
-                  Agora envie a confirmação pelo WhatsApp para finalizar
-                </p>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Resumo da Encomenda</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {items.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>
-                        {item.quantity}x {item.product.name}
-                        {item.selectedOptions.length > 0 && (
-                          <span className="text-muted-foreground">
-                            {' '}({item.selectedOptions.map(o => o.valueName).join(', ')})
-                          </span>
-                        )}
-                      </span>
-                      <span className="font-medium">{formatCurrency(item.lineTotal)}</span>
-                    </div>
-                  ))}
-                  <Separator />
-                  <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <span className="text-primary">{formatCurrency(totalAmount)}</span>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2 text-sm">
-                    <div className="flex gap-2">
-                      <User className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>{checkoutData.clientName}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Phone className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>{checkoutData.clientPhone}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>
-                        {checkoutData.deliveryDate && format(checkoutData.deliveryDate, "dd 'de' MMMM", { locale: pt })}
-                        {checkoutData.deliveryTime && ` às ${checkoutData.deliveryTime}`}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <span>
-                        {checkoutData.fulfillmentType === 'pickup' 
-                          ? 'Retirar no local' 
-                          : checkoutData.deliveryAddress}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Button
-                className="w-full h-14 text-base bg-[#25D366] hover:bg-[#20bd5a]"
-                onClick={handleSendWhatsApp}
+              {/* Celebration particles */}
+              <AnimatePresence>
+                {showCelebration && <CelebrationParticles count={16} />}
+              </AnimatePresence>
+              
+              <motion.div 
+                className="text-center py-8 relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
               >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Enviar no WhatsApp
-              </Button>
+                <div className="flex justify-center mb-6">
+                  <div 
+                    className="relative"
+                    style={{ color: primaryColor }}
+                  >
+                    {/* Glow behind check */}
+                    <motion.div
+                      className="absolute inset-0 blur-2xl rounded-full"
+                      style={{ backgroundColor: primaryColor }}
+                      animate={{
+                        opacity: [0.3, 0.6, 0.3],
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                    <AnimatedCheck size={80} color={primaryColor} delay={0.3} />
+                  </div>
+                </div>
+                <motion.h2 
+                  className="text-2xl font-bold text-foreground mb-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Encomenda Registada!
+                </motion.h2>
+                <motion.p 
+                  className="text-muted-foreground"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  Agora envie a confirmação pelo WhatsApp para finalizar
+                </motion.p>
+              </motion.div>
 
-              <p className="text-center text-xs text-muted-foreground">
-                O estabelecimento irá confirmar a sua encomenda
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Card className="glass-card border-white/10 overflow-hidden">
+                  <CardHeader className="border-b border-white/5">
+                    <CardTitle className="text-base">Resumo da Encomenda</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-6">
+                    {items.map((item, index) => (
+                      <motion.div 
+                        key={index} 
+                        className="flex justify-between text-sm"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + index * 0.05 }}
+                      >
+                        <span>
+                          {item.quantity}x {item.product.name}
+                          {item.selectedOptions.length > 0 && (
+                            <span className="text-muted-foreground">
+                              {' '}({item.selectedOptions.map(o => o.valueName).join(', ')})
+                            </span>
+                          )}
+                        </span>
+                        <span className="font-medium">{formatCurrency(item.lineTotal)}</span>
+                      </motion.div>
+                    ))}
+                    <Separator className="bg-white/10" />
+                    <div className="flex justify-between font-bold">
+                      <span>Total</span>
+                      <span style={{ color: primaryColor }}>{formatCurrency(totalAmount)}</span>
+                    </div>
+                    <Separator className="bg-white/10" />
+                    <div className="space-y-2 text-sm">
+                      <div className="flex gap-2">
+                        <User className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span>{checkoutData.clientName}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Phone className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span>{checkoutData.clientPhone}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span>
+                          {checkoutData.deliveryDate && format(checkoutData.deliveryDate, "dd 'de' MMMM", { locale: pt })}
+                          {checkoutData.deliveryTime && ` às ${checkoutData.deliveryTime}`}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <span>
+                          {checkoutData.fulfillmentType === 'pickup' 
+                            ? 'Retirar no local' 
+                            : checkoutData.deliveryAddress}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* WhatsApp button with shimmer */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+                className="relative"
+              >
+                <MagneticButton
+                  className="w-full h-14 text-base rounded-xl font-bold relative overflow-hidden ripple"
+                  style={{
+                    background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                    color: 'white',
+                    boxShadow: '0 0 40px -5px rgba(37, 211, 102, 0.5)',
+                  }}
+                  onClick={handleSendWhatsApp}
+                >
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                    animate={{ x: ['-200%', '200%'] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      repeatDelay: 4,
+                    }}
+                  />
+                  <span className="relative flex items-center justify-center gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    Enviar pelo WhatsApp
+                  </span>
+                </MagneticButton>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+
+      {/* Footer */}
+      <footer className="container max-w-lg mx-auto px-4 py-6 text-center">
+        <p className="text-xs text-muted-foreground">
+          Powered by <span className="font-semibold" style={{ color: primaryColor }}>Agenda Smart</span>
+        </p>
+      </footer>
     </div>
   );
 }

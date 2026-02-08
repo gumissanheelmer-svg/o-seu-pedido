@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Store, Image, Play } from 'lucide-react';
+import { Store, Image, Play, Plus, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ProductWithOptions } from '@/hooks/useProducts';
 import { formatCurrency } from '@/lib/whatsapp';
+import { staggerItem } from './animations/MotionComponents';
 
 interface CatalogProductCardProps {
   product: ProductWithOptions;
@@ -33,109 +34,159 @@ function getMediaCount(product: ProductWithOptions): number {
 }
 
 export function CatalogProductCard({ product, onClick, primaryColor = '#C9A24D' }: CatalogProductCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const displayMedia = getProductDisplayMedia(product);
   const mediaCount = getMediaCount(product);
   const hasOptions = product.options && product.options.length > 0;
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
+      variants={staggerItem}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <Card 
-        className="overflow-hidden cursor-pointer h-full bg-card border-0 shadow-md hover:shadow-xl transition-shadow duration-300"
-        onClick={onClick}
+      <motion.div
+        whileHover={{ y: -6 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       >
-        {/* Image Container */}
-        <div className="aspect-square bg-muted relative overflow-hidden">
-          {displayMedia ? (
-            <>
-              {displayMedia.type === 'video' ? (
-                <>
-                  <video
-                    src={displayMedia.url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                    loop
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                  />
-                  {/* Video indicator */}
-                  <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                    <Play className="w-3 h-3" fill="white" />
-                  </div>
-                </>
-              ) : (
-                <img
-                  src={displayMedia.url}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                />
-              )}
-              {/* Media count badge */}
-              {mediaCount > 1 && (
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                  <Image className="w-3 h-3" />
-                  <span>{mediaCount}</span>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-              <Store className="w-12 h-12 text-muted-foreground/50" />
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <CardContent className="p-4">
-          {/* Product Name */}
-          <h3 className="font-semibold text-base line-clamp-2 text-foreground mb-1">
-            {product.name}
-          </h3>
+        <Card 
+          className="overflow-hidden cursor-pointer h-full glass-card border-white/5 hover:border-white/20 transition-colors duration-300 group"
+          onClick={onClick}
+        >
+          {/* Hover glow effect */}
+          <motion.div
+            className="absolute -inset-px rounded-2xl pointer-events-none"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor}30, transparent 50%)`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+          />
           
-          {/* Description */}
-          {product.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-              {product.description}
-            </p>
-          )}
-
-          {/* Price & Options */}
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p 
-                className="text-lg font-bold"
-                style={{ color: primaryColor }}
-              >
-                {formatCurrency(product.price)}
-              </p>
-              {hasOptions && (
-                <p className="text-xs text-muted-foreground">
-                  + opções disponíveis
-                </p>
-              )}
-            </div>
+          {/* Image Container */}
+          <div className="aspect-square bg-muted/30 relative overflow-hidden">
+            {/* Shimmer loading state */}
+            {displayMedia && !imageLoaded && (
+              <div className="absolute inset-0 shimmer" />
+            )}
             
-            {/* CTA Button */}
-            <Button
-              size="sm"
-              className="text-white text-xs px-3 shrink-0"
-              style={{ backgroundColor: primaryColor }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClick();
-              }}
-            >
-              Ver mais
-            </Button>
+            {displayMedia ? (
+              <>
+                {displayMedia.type === 'video' ? (
+                  <>
+                    <video
+                      src={displayMedia.url}
+                      className="w-full h-full object-cover"
+                      muted
+                      playsInline
+                      loop
+                      onMouseEnter={(e) => e.currentTarget.play()}
+                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                    />
+                    {/* Video indicator */}
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <Play className="w-3 h-3" fill="white" />
+                    </div>
+                  </>
+                ) : (
+                  <motion.img
+                    src={displayMedia.url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onLoad={() => setImageLoaded(true)}
+                    animate={{
+                      scale: isHovered ? 1.08 : 1,
+                    }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                  />
+                )}
+                
+                {/* Media count badge */}
+                {mediaCount > 1 && (
+                  <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                    <Image className="w-3 h-3" />
+                    <span>{mediaCount}</span>
+                  </div>
+                )}
+                
+                {/* Hover overlay gradient */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isHovered ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/30">
+                <Store className="w-12 h-12 text-muted-foreground/30" />
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Content */}
+          <CardContent className="p-4 relative">
+            {/* Product Name */}
+            <h3 className="font-semibold text-base line-clamp-2 text-foreground mb-1 group-hover:text-white transition-colors">
+              {product.name}
+            </h3>
+            
+            {/* Description */}
+            {product.description && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                {product.description}
+              </p>
+            )}
+
+            {/* Price & Options */}
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p 
+                  className="text-lg font-bold"
+                  style={{ color: primaryColor }}
+                >
+                  {formatCurrency(product.price)}
+                </p>
+                {hasOptions && (
+                  <p className="text-xs text-muted-foreground">
+                    + opções disponíveis
+                  </p>
+                )}
+              </div>
+              
+              {/* CTA Button with glow */}
+              <motion.button
+                className="relative px-4 py-2 rounded-xl text-xs font-semibold overflow-hidden ripple"
+                style={{ 
+                  backgroundColor: primaryColor,
+                  color: 'hsl(225 25% 6%)',
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+              >
+                {/* Button glow */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    boxShadow: `0 0 20px ${primaryColor}60`,
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isHovered ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+                <span className="relative z-10">Ver mais</span>
+              </motion.button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 }
