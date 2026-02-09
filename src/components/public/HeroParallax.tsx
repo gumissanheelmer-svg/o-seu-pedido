@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Business } from '@/types/database';
-import { fadeUp } from './animations/MotionComponents';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-interface CatalogHeroProps {
+interface HeroParallaxProps {
   business: Business;
 }
 
@@ -31,15 +32,32 @@ function getBusinessTypeLabel(type: string): string {
   return labels[type] || '';
 }
 
-export function CatalogHero({ business }: CatalogHeroProps) {
+export function HeroParallax({ business }: HeroParallaxProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = usePrefersReducedMotion();
+  
+  const { scrollY } = useScroll();
+  
+  // Parallax transforms - only when motion is enabled
+  const backgroundY = useTransform(scrollY, [0, 300], [0, reducedMotion ? 0 : 18]);
+  const glowY = useTransform(scrollY, [0, 300], [0, reducedMotion ? 0 : -10]);
+  const contentY = useTransform(scrollY, [0, 300], [0, reducedMotion ? 0 : 25]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.6]);
+
   const primaryColor = business.primary_color || '#C9A24D';
   const businessTypeLabel = getBusinessTypeLabel(business.business_type);
-  const hasCoverMedia = business.cover_video_url || business.cover_image_url;
+  const hasCoverMedia = (business as any).cover_video_url || business.cover_image_url;
 
   return (
-    <div className="relative overflow-hidden min-h-[280px] sm:min-h-[320px]">
-      {/* Background Layer with Gradient Noise Effect */}
-      <div className="absolute inset-0">
+    <div 
+      ref={containerRef}
+      className="relative overflow-hidden min-h-[280px] sm:min-h-[320px]"
+    >
+      {/* Background Layer with Parallax */}
+      <motion.div 
+        className="absolute inset-0"
+        style={{ y: backgroundY }}
+      >
         {/* Base dark gradient */}
         <div 
           className="absolute inset-0"
@@ -48,56 +66,21 @@ export function CatalogHero({ business }: CatalogHeroProps) {
           }}
         />
         
-        {/* Animated radial glow */}
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${primaryColor}25 0%, transparent 70%)`,
-          }}
-          animate={{
-            opacity: [0.5, 0.8, 0.5],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-        
-        {/* Secondary floating glow */}
-        <motion.div
-          className="absolute -top-1/2 -right-1/4 w-full h-full"
-          style={{
-            background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 50%)`,
-          }}
-          animate={{
-            x: [0, 30, 0],
-            y: [0, -20, 0],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-
         {/* Cover image/video if exists */}
         {(business as any).cover_video_url ? (
           <video
             src={(business as any).cover_video_url}
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110"
             autoPlay
             muted
             loop
             playsInline
           />
         ) : business.cover_image_url ? (
-          <img
+          <motion.img
             src={business.cover_image_url}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110"
           />
         ) : null}
         
@@ -118,32 +101,71 @@ export function CatalogHero({ business }: CatalogHeroProps) {
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
         />
-      </div>
+      </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10 px-4 py-10 sm:py-14">
+      {/* Animated radial glow with inverse parallax */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ y: glowY }}
+      >
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${primaryColor}25 0%, transparent 70%)`,
+          }}
+          animate={reducedMotion ? {} : {
+            opacity: [0.5, 0.8, 0.5],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+        
+        {/* Secondary floating glow */}
+        <motion.div
+          className="absolute -top-1/2 -right-1/4 w-full h-full"
+          style={{
+            background: `radial-gradient(circle at center, ${primaryColor}15 0%, transparent 50%)`,
+          }}
+          animate={reducedMotion ? {} : {
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      </motion.div>
+
+      {/* Content with parallax */}
+      <motion.div 
+        className="relative z-10 px-4 py-10 sm:py-14"
+        style={{ y: contentY, opacity }}
+      >
         <motion.div 
           className="max-w-4xl mx-auto flex flex-col items-center text-center"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: { staggerChildren: 0.15, delayChildren: 0.2 },
-            },
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, staggerChildren: 0.15 }}
         >
           {/* Logo with glow */}
           <motion.div 
             className="mb-5 relative"
-            variants={fadeUp}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             {/* Glow behind logo */}
             <motion.div
-              className="absolute inset-0 rounded-2xl blur-2xl opacity-50"
+              className="absolute inset-0 rounded-2xl blur-2xl"
               style={{ backgroundColor: primaryColor }}
-              animate={{
+              animate={reducedMotion ? { opacity: 0.4 } : {
                 opacity: [0.3, 0.5, 0.3],
                 scale: [1, 1.2, 1],
               }}
@@ -178,12 +200,29 @@ export function CatalogHero({ business }: CatalogHeroProps) {
             )}
           </motion.div>
 
-          {/* Business Name */}
+          {/* Business Name with slow float */}
           <motion.h1 
             className="text-2xl sm:text-3xl font-bold mb-2 text-white drop-shadow-lg"
-            variants={fadeUp}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ 
+              opacity: 1, 
+              y: reducedMotion ? 0 : undefined,
+            }}
+            transition={{ duration: 0.5, delay: 0.35 }}
           >
-            {business.name}
+            <motion.span
+              animate={reducedMotion ? {} : {
+                y: [-2, 2, -2],
+              }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              style={{ display: 'inline-block' }}
+            >
+              {business.name}
+            </motion.span>
           </motion.h1>
 
           {/* Subtitle / Business Type */}
@@ -191,7 +230,9 @@ export function CatalogHero({ business }: CatalogHeroProps) {
             <motion.p 
               className="text-sm sm:text-base font-medium mb-3"
               style={{ color: `${primaryColor}cc` }}
-              variants={fadeUp}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
             >
               {businessTypeLabel}
             </motion.p>
@@ -201,13 +242,15 @@ export function CatalogHero({ business }: CatalogHeroProps) {
           {business.description && (
             <motion.p 
               className="text-sm max-w-md leading-relaxed text-white/60"
-              variants={fadeUp}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.65 }}
             >
               {business.description}
             </motion.p>
           )}
         </motion.div>
-      </div>
+      </motion.div>
       
       {/* Bottom fade to content */}
       <div 

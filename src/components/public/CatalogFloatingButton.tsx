@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, MessageCircle, Sparkles } from 'lucide-react';
 import { formatCurrency } from '@/lib/whatsapp';
-import { PingIndicator } from './animations/MotionComponents';
 import {
   Tooltip,
   TooltipContent,
@@ -20,7 +19,7 @@ interface CatalogFloatingButtonProps {
   hasWhatsApp?: boolean;
 }
 
-export function CatalogFloatingButton({
+export const CatalogFloatingButton = forwardRef<HTMLButtonElement, CatalogFloatingButtonProps>(({
   totalItems,
   totalAmount,
   primaryColor = '#C9A24D',
@@ -28,7 +27,7 @@ export function CatalogFloatingButton({
   onWhatsAppClick,
   showWhatsApp = false,
   hasWhatsApp = true,
-}: CatalogFloatingButtonProps) {
+}, ref) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPing, setShowPing] = useState(false);
   const prevItemsRef = useRef(totalItems);
@@ -117,6 +116,7 @@ export function CatalogFloatingButton({
               
               {/* Main pill button */}
               <motion.button
+                ref={ref}
                 onClick={handleClick}
                 className="relative flex items-center gap-3 px-6 py-4 rounded-full font-semibold shadow-2xl overflow-hidden"
                 style={{
@@ -289,7 +289,9 @@ export function CatalogFloatingButton({
       </div>
     </TooltipProvider>
   );
-}
+});
+
+CatalogFloatingButton.displayName = 'CatalogFloatingButton';
 
 // Helper function to adjust color brightness
 function adjustColor(hex: string, percent: number): string {
