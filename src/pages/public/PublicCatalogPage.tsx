@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Store } from 'lucide-react';
@@ -6,9 +6,7 @@ import { usePublicBusiness } from '@/hooks/useBusiness';
 import { usePublicProducts, ProductWithOptions } from '@/hooks/useProducts';
 import { usePublicCategories } from '@/hooks/useCategories';
 import { Button } from '@/components/ui/button';
-import { CartProvider, useCartContext } from '@/contexts/CartContext';
 import { ProductDetailModal } from '@/components/public/ProductDetailModal';
-import { CheckoutFlow } from '@/components/public/CheckoutFlow';
 import { HeroParallax } from '@/components/public/HeroParallax';
 import { CatalogEmptyState } from '@/components/public/CatalogEmptyState';
 import { CatalogProductCard } from '@/components/public/CatalogProductCard';
@@ -16,11 +14,8 @@ import { CatalogFloatingButton } from '@/components/public/CatalogFloatingButton
 import { CatalogStickyHeader } from '@/components/public/CatalogStickyHeader';
 import { SkeletonHero, SkeletonGrid } from '@/components/public/animations/SkeletonCard';
 import { staggerContainer } from '@/components/public/animations/MotionComponents';
-import { CartSheet } from '@/components/public/cart/CartSheet';
-import { MiniCartToast, ToastData } from '@/components/public/cart/MiniCartToast';
-import { AddToCartAnimation, FlyingItem } from '@/components/public/cart/AddToCartAnimation';
 
-function CatalogContent() {
+export default function PublicCatalogPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: business, isLoading: businessLoading, error: businessError } = usePublicBusiness(slug || '');
   const { data: products, isLoading: productsLoading } = usePublicProducts(business?.id || '');
@@ -28,50 +23,8 @@ function CatalogContent() {
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithOptions | null>(null);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [cartSheetOpen, setCartSheetOpen] = useState(false);
-  
-  // Animation states
-  const [flyingItem, setFlyingItem] = useState<FlyingItem | null>(null);
-  const [miniCartToast, setMiniCartToast] = useState<ToastData | null>(null);
-  const fabRef = useRef<HTMLButtonElement>(null);
-  
-  const { items, removeItem, updateQuantity, totalItems, totalAmount, clearCart } = useCartContext();
 
   const primaryColor = business?.primary_color || '#C9A24D';
-
-  // Get FAB position for fly animation
-  const getFabPosition = useCallback(() => {
-    if (fabRef.current) {
-      const rect = fabRef.current.getBoundingClientRect();
-      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-    }
-    // Fallback position (bottom right)
-    return { x: window.innerWidth - 40, y: window.innerHeight - 100 };
-  }, []);
-
-  // Handle item added - trigger fly animation and toast
-  const handleItemAdded = useCallback((product: ProductWithOptions, startX: number, startY: number) => {
-    const mainImage = product.main_image_url || product.image_url;
-    
-    // Trigger fly animation
-    setFlyingItem({
-      id: `${product.id}-${Date.now()}`,
-      startX,
-      startY,
-      color: primaryColor,
-      image: mainImage || undefined,
-    });
-
-    // Show mini cart toast
-    setMiniCartToast({
-      id: `toast-${Date.now()}`,
-      productName: product.name,
-      productImage: mainImage || undefined,
-      timestamp: Date.now(),
-    });
-  }, [primaryColor]);
 
   // Loading state with skeleton
   if (businessLoading || productsLoading) {
@@ -106,20 +59,6 @@ function CatalogContent() {
     );
   }
 
-  // Checkout flow
-  if (showCheckout) {
-    return (
-      <CheckoutFlow 
-        business={business} 
-        onBack={() => setShowCheckout(false)}
-        onComplete={() => {
-          clearCart();
-          setShowCheckout(false);
-        }}
-      />
-    );
-  }
-
   const filteredProducts = selectedCategory
     ? products?.filter(p => p.category_id === selectedCategory)
     : products;
@@ -139,8 +78,9 @@ function CatalogContent() {
 
   const handleWhatsAppClick = () => {
     const phone = business.whatsapp_number.replace(/\D/g, '');
+    const formattedPhone = phone.startsWith('258') ? phone : (phone.length === 9 ? '258' + phone : phone);
     const text = encodeURIComponent(`Olá! Vi o catálogo de ${business.name} e gostaria de saber mais.`);
-    window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
   };
 
   return (
@@ -149,20 +89,7 @@ function CatalogContent() {
       <HeroParallax business={business} />
 
       {/* Sticky Header */}
-      <CatalogStickyHeader
-        business={business}
-        cartOpen={cartOpen}
-        setCartOpen={setCartOpen}
-        items={items}
-        totalItems={totalItems}
-        totalAmount={totalAmount}
-        removeItem={removeItem}
-        updateQuantity={updateQuantity}
-        onCheckout={() => {
-          setCartOpen(false);
-          setShowCheckout(true);
-        }}
-      />
+      <CatalogStickyHeader business={business} />
 
       {/* Category Filter */}
       {categories && categories.length > 0 && hasProducts && (
@@ -298,55 +225,22 @@ function CatalogContent() {
         </main>
       )}
 
-      {/* Floating Button with ref for animation target */}
+      {/* Floating WhatsApp Button */}
       <AnimatePresence>
         <CatalogFloatingButton
-          ref={fabRef}
-          totalItems={totalItems}
-          totalAmount={totalAmount}
           primaryColor={primaryColor}
-          onCartClick={() => setCartSheetOpen(true)}
           onWhatsAppClick={handleWhatsAppClick}
-          showWhatsApp={!hasProducts}
           hasWhatsApp={!!business.whatsapp_number}
         />
       </AnimatePresence>
 
-      {/* Cart Sheet (Bottom Sheet) */}
-      <CartSheet
-        open={cartSheetOpen}
-        onClose={() => setCartSheetOpen(false)}
-        onCheckout={() => {
-          setCartSheetOpen(false);
-          setShowCheckout(true);
-        }}
-        primaryColor={primaryColor}
-      />
-
-      {/* Mini Cart Toast */}
-      <MiniCartToast
-        toast={miniCartToast}
-        onDismiss={() => setMiniCartToast(null)}
-        onViewCart={() => {
-          setMiniCartToast(null);
-          setCartSheetOpen(true);
-        }}
-        primaryColor={primaryColor}
-      />
-
-      {/* Flying animation */}
-      <AddToCartAnimation
-        flyingItem={flyingItem}
-        fabPosition={getFabPosition()}
-        onComplete={() => setFlyingItem(null)}
-      />
-
-      {/* Product Detail Modal */}
+      {/* Product Detail Modal with Direct WhatsApp */}
       <ProductDetailModal
         product={selectedProduct}
         open={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onItemAdded={handleItemAdded}
+        businessName={business.name}
+        whatsappNumber={business.whatsapp_number}
         primaryColor={primaryColor}
       />
 
@@ -357,13 +251,5 @@ function CatalogContent() {
         </p>
       </footer>
     </div>
-  );
-}
-
-export default function PublicCatalogPage() {
-  return (
-    <CartProvider>
-      <CatalogContent />
-    </CartProvider>
   );
 }

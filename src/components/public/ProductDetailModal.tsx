@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Minus, ShoppingCart, ChevronLeft, ChevronRight, Play, Check } from 'lucide-react';
+import { Plus, Minus, ChevronLeft, ChevronRight, Play, MessageCircle, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ProductWithOptions, ProductOption } from '@/hooks/useProducts';
-import { useCartContext, SelectedOption } from '@/contexts/CartContext';
+import { ProductWithOptions } from '@/hooks/useProducts';
 import { formatCurrency } from '@/lib/whatsapp';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface MediaItem {
@@ -23,7 +19,8 @@ interface ProductDetailModalProps {
   product: ProductWithOptions | null;
   open: boolean;
   onClose: () => void;
-  onItemAdded?: (product: ProductWithOptions, startX: number, startY: number) => void;
+  businessName: string;
+  whatsappNumber: string;
   primaryColor?: string;
 }
 
@@ -54,89 +51,85 @@ function getProductMedia(product: ProductWithOptions): MediaItem[] {
   return media;
 }
 
+// Generate WhatsApp message
+function generateWhatsAppMessage(
+  productName: string,
+  quantity: number,
+  observations: string,
+  businessName: string,
+  unitPrice: number
+): string {
+  const lines = [
+    `Olá! 👋`,
+    ``,
+    `Gostaria de fazer uma encomenda:`,
+    ``,
+    `📦 *Produto:* ${productName}`,
+    `🔢 *Quantidade:* ${quantity}`,
+    `💰 *Valor unitário:* ${formatCurrency(unitPrice)}`,
+    `💵 *Total:* ${formatCurrency(unitPrice * quantity)}`,
+  ];
+
+  if (observations.trim()) {
+    lines.push(``, `📝 *Observações:* ${observations.trim()}`);
+  }
+
+  lines.push(``, `Aguardo confirmação. Obrigado! 🙏`);
+
+  return lines.join('\n');
+}
+
 export function ProductDetailModal({ 
   product, 
   open, 
   onClose,
-  onItemAdded,
-  primaryColor: propPrimaryColor,
+  businessName,
+  whatsappNumber,
+  primaryColor = '#C9A24D',
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, SelectedOption>>({});
+  const [observations, setObservations] = useState('');
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [isAdded, setIsAdded] = useState(false);
-  const { addItem } = useCartContext();
-  const addButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   if (!product) return null;
 
-  const options = product.options || [];
   const media = getProductMedia(product);
-  const primaryColor = propPrimaryColor || '#C9A24D';
-  
-  const calculateTotalPrice = () => {
-    const basePrice = product.price;
-    const optionsTotal = Object.values(selectedOptions).reduce(
-      (sum, opt) => sum + opt.priceAdjustment,
-      0
-    );
-    return (basePrice + optionsTotal) * quantity;
-  };
-
-  const handleOptionChange = (option: ProductOption, valueId: string) => {
-    const selectedValue = option.values?.find(v => v.id === valueId);
-    if (!selectedValue) return;
-
-    setSelectedOptions(prev => ({
-      ...prev,
-      [option.id]: {
-        optionId: option.id,
-        optionName: option.name,
-        valueId: selectedValue.id,
-        valueName: selectedValue.value,
-        priceAdjustment: selectedValue.price_adjustment,
-      },
-    }));
-  };
-
-  const handleAddToCart = () => {
-    // Check required options
-    const requiredOptions = options.filter(o => o.required);
-    const missingRequired = requiredOptions.filter(o => !selectedOptions[o.id]);
-    
-    if (missingRequired.length > 0) {
-      toast.error(`Selecione: ${missingRequired.map(o => o.name).join(', ')}`);
-      return;
-    }
-
-    addItem(product, Object.values(selectedOptions), quantity);
-    
-    // Trigger fly animation if callback provided
-    if (onItemAdded && addButtonRef.current) {
-      const rect = addButtonRef.current.getBoundingClientRect();
-      onItemAdded(product, rect.left + rect.width / 2, rect.top + rect.height / 2);
-    }
-    
-    // Show success animation
-    setIsAdded(true);
-    setTimeout(() => {
-      setIsAdded(false);
-      // Reset and close
-      setQuantity(1);
-      setSelectedOptions({});
-      setCurrentMediaIndex(0);
-      onClose();
-    }, 800);
-    
-    toast.success('Adicionado ao carrinho!');
-  };
+  const totalPrice = product.price * quantity;
 
   const handleClose = () => {
     setQuantity(1);
-    setSelectedOptions({});
+    setObservations('');
     setCurrentMediaIndex(0);
-    setIsAdded(false);
+    setIsOrdering(false);
     onClose();
+  };
+
+  const handleWhatsAppOrder = () => {
+    setIsOrdering(true);
+    
+    const message = generateWhatsAppMessage(
+      product.name,
+      quantity,
+      observations,
+      businessName,
+      product.price
+    );
+    
+    // Format phone number (remove non-digits and ensure 258 prefix for Mozambique)
+    let phone = whatsappNumber.replace(/\D/g, '');
+    if (!phone.startsWith('258') && phone.length === 9) {
+      phone = '258' + phone;
+    }
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    
+    // Short delay for visual feedback
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank');
+      handleClose();
+    }, 600);
   };
 
   const navigateMedia = (direction: 'prev' | 'next') => {
@@ -211,7 +204,6 @@ export function ProductDetailModal({
                 {media.length > 1 && (
                   <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 px-4">
                     {media.length <= 6 ? (
-                      // Show thumbnails for small galleries
                       media.map((m, index) => (
                         <motion.button
                           key={index}
@@ -240,7 +232,6 @@ export function ProductDetailModal({
                         </motion.button>
                       ))
                     ) : (
-                      // Show dots for larger galleries
                       media.map((_, index) => (
                         <button
                           key={index}
@@ -275,100 +266,14 @@ export function ProductDetailModal({
               {formatCurrency(product.price)}
             </p>
 
-            {/* Options */}
-            {options.length > 0 && (
-              <div className="space-y-6 mt-4">
-                {options.map((option) => (
-                  <div key={option.id} className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Label className="font-medium">{option.name}</Label>
-                      {option.required && (
-                        <span className="text-xs text-destructive">*Obrigatório</span>
-                      )}
-                    </div>
-
-                    {(option.type === 'radio' || option.type === 'select') && (
-                      <RadioGroup
-                        value={selectedOptions[option.id]?.valueId || ''}
-                        onValueChange={(value) => handleOptionChange(option, value)}
-                        className="space-y-2"
-                      >
-                        {option.values?.map((value) => (
-                          <motion.div
-                            key={value.id}
-                            className="flex items-center justify-between p-3 border border-white/10 rounded-xl glass hover:bg-white/5 cursor-pointer"
-                            onClick={() => handleOptionChange(option, value.id)}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <RadioGroupItem value={value.id} id={value.id} />
-                              <Label htmlFor={value.id} className="cursor-pointer">
-                                {value.value}
-                              </Label>
-                            </div>
-                            {value.price_adjustment !== 0 && (
-                              <span className="text-sm text-muted-foreground">
-                                {value.price_adjustment > 0 ? '+' : ''}
-                                {formatCurrency(value.price_adjustment)}
-                              </span>
-                            )}
-                          </motion.div>
-                        ))}
-                      </RadioGroup>
-                    )}
-
-                    {option.type === 'checkbox' && (
-                      <div className="space-y-2">
-                        {option.values?.map((value) => (
-                          <motion.div
-                            key={value.id}
-                            className="flex items-center justify-between p-3 border border-white/10 rounded-xl glass hover:bg-white/5"
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox
-                                id={value.id}
-                                checked={selectedOptions[value.id]?.valueId === value.id}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    handleOptionChange(option, value.id);
-                                  } else {
-                                    setSelectedOptions(prev => {
-                                      const updated = { ...prev };
-                                      delete updated[value.id];
-                                      return updated;
-                                    });
-                                  }
-                                }}
-                              />
-                              <Label htmlFor={value.id} className="cursor-pointer">
-                                {value.value}
-                              </Label>
-                            </div>
-                            {value.price_adjustment !== 0 && (
-                              <span className="text-sm text-muted-foreground">
-                                +{formatCurrency(value.price_adjustment)}
-                              </span>
-                            )}
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
             <Separator className="my-4 bg-white/10" />
 
             {/* Quantity */}
             <div className="flex items-center justify-between">
-              <Label>Quantidade</Label>
+              <Label className="text-base">Quantidade</Label>
               <div className="flex items-center gap-3">
                 <motion.button
-                  className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -379,12 +284,12 @@ export function ProductDetailModal({
                   key={quantity}
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
-                  className="text-lg font-medium w-8 text-center"
+                  className="text-xl font-bold w-10 text-center"
                 >
                   {quantity}
                 </motion.span>
                 <motion.button
-                  className="w-9 h-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center"
                   onClick={() => setQuantity(q => q + 1)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -394,21 +299,65 @@ export function ProductDetailModal({
               </div>
             </div>
 
-            {/* Add to Cart */}
+            {/* Observations */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="observations" className="text-base">
+                Observações <span className="text-muted-foreground text-sm">(opcional)</span>
+              </Label>
+              <Textarea
+                id="observations"
+                placeholder="Ex: Sem cobertura, entregar às 15h, etc."
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                className="min-h-[80px] bg-white/5 border-white/10 focus:border-white/20 resize-none rounded-xl"
+              />
+            </div>
+
+            {/* Total */}
+            <div className="mt-4 p-4 rounded-xl glass">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Total</span>
+                <motion.span 
+                  key={totalPrice}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  className="text-2xl font-bold"
+                  style={{ color: primaryColor }}
+                >
+                  {formatCurrency(totalPrice)}
+                </motion.span>
+              </div>
+            </div>
+
+            {/* WhatsApp Order Button */}
             <motion.button 
-              ref={addButtonRef}
-              className="w-full h-12 text-base mt-4 rounded-xl font-semibold ripple relative overflow-hidden flex items-center justify-center gap-2"
+              className="w-full h-14 text-base mt-4 rounded-xl font-semibold ripple relative overflow-hidden flex items-center justify-center gap-3"
               style={{ 
-                backgroundColor: isAdded ? 'hsl(145 60% 42%)' : primaryColor,
-                color: 'hsl(225 25% 6%)',
-                boxShadow: `0 0 30px -5px ${isAdded ? 'hsl(145 60% 42%)' : primaryColor}60`,
+                backgroundColor: isOrdering ? 'hsl(145 60% 42%)' : '#25D366',
+                color: 'white',
+                boxShadow: `0 0 30px -5px ${isOrdering ? 'hsl(145 60% 42%)' : '#25D366'}60`,
               }}
-              onClick={handleAddToCart}
+              onClick={handleWhatsAppOrder}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              disabled={isOrdering}
             >
+              {/* Shimmer effect */}
+              {!isOrdering && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                  animate={{ x: ['-200%', '200%'] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    repeatDelay: 4,
+                  }}
+                />
+              )}
+              
               <AnimatePresence mode="wait">
-                {isAdded ? (
+                {isOrdering ? (
                   <motion.span
                     key="check"
                     initial={{ scale: 0 }}
@@ -417,22 +366,26 @@ export function ProductDetailModal({
                     className="flex items-center gap-2"
                   >
                     <Check className="w-5 h-5" />
-                    Adicionado!
+                    A abrir WhatsApp...
                   </motion.span>
                 ) : (
                   <motion.span
-                    key="add"
+                    key="order"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 relative z-10"
                   >
-                    <ShoppingCart className="w-5 h-5" />
-                    Adicionar • {formatCurrency(calculateTotalPrice())}
+                    <MessageCircle className="w-5 h-5" fill="white" />
+                    Encomendar pelo WhatsApp
                   </motion.span>
                 )}
               </AnimatePresence>
             </motion.button>
+
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Será redirecionado para o WhatsApp com os detalhes da encomenda
+            </p>
           </div>
         </ScrollArea>
       </DialogContent>

@@ -161,8 +161,8 @@ export function CatalogProductCard({ product, onClick, primaryColor = '#C9A24D' 
               <motion.button
                 className="relative px-4 py-2 rounded-xl text-xs font-semibold overflow-hidden ripple"
                 style={{ 
-                  backgroundColor: primaryColor,
-                  color: 'hsl(225 25% 6%)',
+                  backgroundColor: '#25D366',
+                  color: 'white',
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -175,13 +175,13 @@ export function CatalogProductCard({ product, onClick, primaryColor = '#C9A24D' 
                 <motion.div
                   className="absolute inset-0 rounded-xl"
                   style={{
-                    boxShadow: `0 0 20px ${primaryColor}60`,
+                    boxShadow: `0 0 20px #25D36660`,
                   }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: isHovered ? 1 : 0 }}
                   transition={{ duration: 0.3 }}
                 />
-                <span className="relative z-10">Ver mais</span>
+                <span className="relative z-10">Encomendar</span>
               </motion.button>
             </div>
           </CardContent>
