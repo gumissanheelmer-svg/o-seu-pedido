@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, ShoppingCart, ChevronLeft, ChevronRight, Play, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,6 +23,8 @@ interface ProductDetailModalProps {
   product: ProductWithOptions | null;
   open: boolean;
   onClose: () => void;
+  onItemAdded?: (product: ProductWithOptions, startX: number, startY: number) => void;
+  primaryColor?: string;
 }
 
 // Get all media items from product
@@ -52,18 +54,25 @@ function getProductMedia(product: ProductWithOptions): MediaItem[] {
   return media;
 }
 
-export function ProductDetailModal({ product, open, onClose }: ProductDetailModalProps) {
+export function ProductDetailModal({ 
+  product, 
+  open, 
+  onClose,
+  onItemAdded,
+  primaryColor: propPrimaryColor,
+}: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, SelectedOption>>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
   const { addItem } = useCartContext();
+  const addButtonRef = React.useRef<HTMLButtonElement>(null);
 
   if (!product) return null;
 
   const options = product.options || [];
   const media = getProductMedia(product);
-  const primaryColor = '#C9A24D'; // Default gold
+  const primaryColor = propPrimaryColor || '#C9A24D';
   
   const calculateTotalPrice = () => {
     const basePrice = product.price;
@@ -101,6 +110,12 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
     }
 
     addItem(product, Object.values(selectedOptions), quantity);
+    
+    // Trigger fly animation if callback provided
+    if (onItemAdded && addButtonRef.current) {
+      const rect = addButtonRef.current.getBoundingClientRect();
+      onItemAdded(product, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
     
     // Show success animation
     setIsAdded(true);
@@ -381,6 +396,7 @@ export function ProductDetailModal({ product, open, onClose }: ProductDetailModa
 
             {/* Add to Cart */}
             <motion.button 
+              ref={addButtonRef}
               className="w-full h-12 text-base mt-4 rounded-xl font-semibold ripple relative overflow-hidden flex items-center justify-center gap-2"
               style={{ 
                 backgroundColor: isAdded ? 'hsl(145 60% 42%)' : primaryColor,
