@@ -1,110 +1,205 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Heart, Users, Zap, ArrowLeft } from 'lucide-react';
+import { Heart, Target, Zap, ArrowRight, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, delay: i * 0.15, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+  }),
+};
+
+const values = [
+  {
+    icon: Heart,
+    title: 'Feito com propósito',
+    description: 'Criado para negócios reais que querem crescer com organização e imagem profissional.',
+    gradient: 'from-rose-500/20 to-pink-500/20',
+    iconColor: '#E11D48',
+  },
+  {
+    icon: Target,
+    title: 'Foco total no cliente',
+    description: 'Seus clientes fazem pedidos sem complicação e você recebe tudo estruturado no WhatsApp.',
+    gradient: 'from-blue-500/20 to-indigo-500/20',
+    iconColor: '#3B82F6',
+  },
+  {
+    icon: Zap,
+    title: 'Simples, rápido e moderno',
+    description: 'Configure em minutos e tenha uma loja digital pronta para receber pedidos.',
+    gradient: 'from-amber-500/20 to-orange-500/20',
+    iconColor: '#F59E0B',
+  },
+];
+
+const testimonials = [
+  { text: 'Agora recebo pedidos organizados e sem confusão. Meu negócio cresceu muito!', role: 'Dona de Pastelaria' },
+  { text: 'Meus clientes adoram a facilidade. Tudo pelo WhatsApp, simples e rápido.', role: 'Empreendedora de Bolos' },
+  { text: 'Finalmente tenho controle dos meus pedidos. Recomendo a todos!', role: 'Dono de Restaurante' },
+];
+
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#FAFAFA' }}>
       <Navbar />
-      
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          {/* Hero */}
-          <motion.div
+
+      <main className="pt-28 pb-20">
+        {/* Hero */}
+        <section className="container mx-auto px-4 text-center max-w-3xl mb-24">
+          <motion.h1
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="text-4xl md:text-5xl lg:text-[3.25rem] font-bold leading-tight mb-6"
+            style={{ color: '#1A1A2E', letterSpacing: '-0.02em' }}
+          >
+            Transformamos pedidos simples em negócios organizados.
+          </motion.h1>
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-lg md:text-xl mb-10 max-w-2xl mx-auto"
+            style={{ color: '#555', lineHeight: '1.7' }}
           >
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
-              Sobre o Encomendas
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Nascemos para ajudar pequenos negócios moçambicanos a receberem pedidos de forma profissional e organizada.
-            </p>
-          </motion.div>
-
-          {/* Values */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-center p-6"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-display font-bold text-foreground mb-2">
-                Feito com Amor
-              </h3>
-              <p className="text-muted-foreground">
-                Entendemos os desafios dos pequenos negócios porque trabalhamos lado a lado com eles.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-center p-6"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-secondary/30 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-secondary-foreground" />
-              </div>
-              <h3 className="text-xl font-display font-bold text-foreground mb-2">
-                Focado no Cliente
-              </h3>
-              <p className="text-muted-foreground">
-                Sem complicações, sem apps extras. Seus clientes fazem pedidos em segundos.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-center p-6"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-accent/30 flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-accent-foreground" />
-              </div>
-              <h3 className="text-xl font-display font-bold text-foreground mb-2">
-                Simples e Rápido
-              </h3>
-              <p className="text-muted-foreground">
-                Configure sua loja em minutos e comece a receber pedidos pelo WhatsApp.
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Mission */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-muted/30 rounded-3xl p-8 md:p-12 max-w-4xl mx-auto text-center"
-          >
-            <div className="w-20 h-20 rounded-2xl gradient-hero flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-4">
-              Nossa Missão
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Empoderar pequenos empreendedores com ferramentas profissionais para crescer seus negócios, 
-              sem precisar de conhecimento técnico ou grandes investimentos.
-            </p>
+            O Encomendas nasceu para ajudar pequenos negócios moçambicanos a venderem com profissionalismo, organização e automação via WhatsApp.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
             <Link to="/registar">
-              <Button variant="hero" size="lg">
-                Começar Agora
+              <Button
+                size="lg"
+                className="rounded-full px-8 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(135deg, #C9A24D, #B8902F)' }}
+              >
+                Criar minha loja agora
+                <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </motion.div>
-        </div>
+        </section>
+
+        {/* Values */}
+        <section className="py-20" style={{ backgroundColor: '#F5F5F5' }}>
+          <div className="container mx-auto px-4">
+            <motion.h2
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              custom={0}
+              variants={fadeUp}
+              className="text-3xl md:text-4xl font-bold text-center mb-16"
+              style={{ color: '#1A1A2E' }}
+            >
+              Por que o Encomendas?
+            </motion.h2>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {values.map((v, i) => (
+                <motion.div
+                  key={v.title}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: '-30px' }}
+                  custom={i + 1}
+                  variants={fadeUp}
+                  whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
+                  className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 transition-all duration-300 cursor-default"
+                >
+                  <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${v.gradient} flex items-center justify-center mb-5`}
+                  >
+                    <v.icon className="w-7 h-7" style={{ color: v.iconColor }} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3" style={{ color: '#1A1A2E' }}>{v.title}</h3>
+                  <p style={{ color: '#666', lineHeight: '1.65' }}>{v.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials / Social Proof */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <motion.h2
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              custom={0}
+              variants={fadeUp}
+              className="text-3xl md:text-4xl font-bold text-center mb-4"
+              style={{ color: '#1A1A2E' }}
+            >
+              Pequenos negócios já estão usando
+            </motion.h2>
+            <motion.p
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={0.5}
+              variants={fadeUp}
+              className="text-center mb-14"
+              style={{ color: '#888' }}
+            >
+              Veja o que dizem os nossos primeiros utilizadores
+            </motion.p>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {testimonials.map((t, i) => (
+                <motion.div
+                  key={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: '-30px' }}
+                  custom={i + 1}
+                  variants={fadeUp}
+                  className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
+                >
+                  <div className="flex gap-0.5 mb-4">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-base mb-5 italic" style={{ color: '#444', lineHeight: '1.65' }}>
+                    "{t.text}"
+                  </p>
+                  <span className="text-sm font-medium" style={{ color: '#999' }}>— {t.role}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16" style={{ backgroundColor: '#F5F5F5' }}>
+          <div className="container mx-auto px-4 text-center">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={0}
+              variants={fadeUp}
+            >
+              <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: '#1A1A2E' }}>
+                Pronto para organizar seus pedidos?
+              </h2>
+              <Link to="/registar">
+                <Button
+                  size="lg"
+                  className="rounded-full px-8 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                  style={{ background: 'linear-gradient(135deg, #C9A24D, #B8902F)' }}
+                >
+                  Começar agora
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
       </main>
 
       <Footer />
