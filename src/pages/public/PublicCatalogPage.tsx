@@ -14,6 +14,7 @@ import { CatalogFloatingButton } from '@/components/public/CatalogFloatingButton
 import { CatalogStickyHeader } from '@/components/public/CatalogStickyHeader';
 import { SkeletonHero, SkeletonGrid } from '@/components/public/animations/SkeletonCard';
 import { staggerContainer } from '@/components/public/animations/MotionComponents';
+import { AdminAccessButton } from '@/components/public/AdminAccessButton';
 
 export default function PublicCatalogPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -86,6 +87,7 @@ export default function PublicCatalogPage() {
   return (
     <div className="min-h-screen theme-premium-dark bg-background flex flex-col">
       {/* Hero Section with Parallax */}
+      <AdminAccessButton />
       <HeroParallax business={business} />
 
       {/* Sticky Header */}
