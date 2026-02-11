@@ -217,11 +217,11 @@ export function ProductDetailModal({
             )}
 
             <DialogHeader>
-              <DialogTitle className="text-xl text-foreground">{product.name}</DialogTitle>
+              <DialogTitle className="text-xl font-bold" style={{ color: '#FFFFFF', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>{product.name}</DialogTitle>
             </DialogHeader>
 
             {product.description && (
-              <p className="text-muted-foreground text-sm mt-2">{product.description}</p>
+              <p className="text-sm mt-2" style={{ color: '#EAEAEA', lineHeight: '1.6' }}>{product.description}</p>
             )}
 
             <p className="text-2xl font-bold mt-3" style={{ color: primaryColor }}>
@@ -232,7 +232,7 @@ export function ProductDetailModal({
 
             {/* Quantity */}
             <div className="flex items-center justify-between">
-              <Label className="text-base">Quantidade</Label>
+              <Label className="text-base font-medium" style={{ color: '#F5F5F5' }}>Quantidade</Label>
               <div className="flex items-center gap-3">
                 <motion.button className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center" onClick={() => setQuantity(q => Math.max(1, q - 1))} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Minus className="w-4 h-4" />
@@ -250,15 +250,15 @@ export function ProductDetailModal({
 
             {/* Order Details Section */}
             <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <h3 className="text-base font-semibold flex items-center gap-2" style={{ color: '#FFFFFF' }}>
                 <Paperclip className="w-4 h-4" style={{ color: primaryColor }} />
                 Detalhes do Pedido
               </h3>
 
               {/* Advanced Description */}
               <div className="space-y-1.5">
-                <Label htmlFor="description" className="text-sm">
-                  Descrição <span className="text-muted-foreground text-xs">(opcional)</span>
+                <Label htmlFor="description" className="text-sm font-medium" style={{ color: '#F5F5F5' }}>
+                  Descrição <span style={{ color: '#AAAAAA', fontSize: '0.75rem' }}>(opcional)</span>
                 </Label>
                 <textarea
                   id="description"
@@ -280,12 +280,10 @@ export function ProductDetailModal({
                 />
                 <div className="flex justify-end">
                   <span
-                    className={cn(
-                      "text-[11px] tabular-nums transition-colors duration-200",
-                      isOverLimit ? "text-red-400 font-medium" :
-                      isNearLimit ? "text-orange-400" :
-                      "text-white/25"
-                    )}
+                    className="text-[11px] tabular-nums transition-colors duration-200 font-medium"
+                    style={{
+                      color: isOverLimit ? '#FF3B3B' : isNearLimit ? '#FFA500' : '#FFFFFF'
+                    }}
                   >
                     {charCount} / {MAX_DESCRIPTION} caracteres
                   </span>
@@ -338,15 +336,15 @@ export function ProductDetailModal({
 
             {/* WhatsApp Order Button */}
             <motion.button
-              className="w-full h-14 text-base mt-4 rounded-xl font-semibold ripple relative overflow-hidden flex items-center justify-center gap-3"
+              className="w-full h-14 text-base mt-4 rounded-xl font-bold ripple relative overflow-hidden flex items-center justify-center gap-3"
               style={{
                 backgroundColor: isOrdering ? 'hsl(145 60% 42%)' : '#25D366',
-                color: 'white',
-                boxShadow: `0 0 30px -5px ${isOrdering ? 'hsl(145 60% 42%)' : '#25D366'}60`,
+                color: '#FFFFFF',
+                boxShadow: !isOverLimit ? `0 0 30px -5px ${isOrdering ? 'hsl(145 60% 42%)' : '#25D366'}60, ${!isOrdering ? '0 0 20px rgba(37,211,102,0.4)' : ''}` : 'none',
                 opacity: isOverLimit ? 0.5 : 1,
               }}
               onClick={handleWhatsAppOrder}
-              whileHover={!isOverLimit ? { scale: 1.02 } : {}}
+              whileHover={!isOverLimit ? { scale: 1.02, boxShadow: '0 0 40px rgba(37,211,102,0.6), 0 0 20px rgba(37,211,102,0.4)' } : {}}
               whileTap={!isOverLimit ? { scale: 0.98 } : {}}
               disabled={isOrdering || isOverLimit}
             >
@@ -373,7 +371,7 @@ export function ProductDetailModal({
               </AnimatePresence>
             </motion.button>
 
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p className="text-xs text-center mt-3" style={{ color: '#AAAAAA' }}>
               Será redirecionado para o WhatsApp com os detalhes da encomenda
             </p>
           </div>
