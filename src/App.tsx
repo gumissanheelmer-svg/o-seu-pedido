@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import Demo from "./pages/Demo";
+import Clario from "./pages/Clario";
 import NotFound from "./pages/NotFound";
 import AwaitingApproval from "./pages/AwaitingApproval";
 
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/precos" element={<Pricing />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/aguardando-aprovacao" element={<AwaitingApproval />} />
+          <Route path="/clario" element={<Clario />} />
           
           {/* Public Order Page */}
           <Route path="/p/:slug" element={<PublicOrderPage />} />
