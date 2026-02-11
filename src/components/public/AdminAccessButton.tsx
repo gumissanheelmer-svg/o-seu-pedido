@@ -1,56 +1,35 @@
 import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 export function AdminAccessButton() {
   const navigate = useNavigate();
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <motion.button
-            onClick={() => navigate('/entrar')}
-            className="fixed top-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center border cursor-pointer"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              borderColor: 'rgba(255,255,255,0.15)',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.2), 0 0 20px rgba(201,162,77,0.08)',
-            }}
-            animate={{ y: [0, -3, 0] }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            whileHover={{ scale: 1.08, boxShadow: '0 4px 24px rgba(0,0,0,0.2), 0 0 28px rgba(201,162,77,0.18)' }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Shield className="w-[18px] h-[18px] text-white/60 transition-colors duration-200 group-hover:text-white/80" />
-          </motion.button>
-        </TooltipTrigger>
-        <TooltipContent
-          side="left"
-          sideOffset={8}
-          className="rounded-xl border px-3 py-1.5 text-xs font-medium shadow-xl"
-          style={{
-            background: 'rgba(15,18,32,0.92)',
-            backdropFilter: 'blur(8px)',
-            borderColor: 'rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.8)',
-          }}
-        >
-          Área do Gestor
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <motion.button
+      onClick={() => navigate('/entrar')}
+      className="fixed top-5 right-5 z-50 px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase cursor-pointer border-0"
+      style={{
+        background: 'linear-gradient(135deg, #C9A24D 0%, #E8C66A 50%, #B8902F 100%)',
+        color: '#1a1a1a',
+        boxShadow: '0 4px 20px rgba(201,162,77,0.25), 0 1px 4px rgba(0,0,0,0.15)',
+      }}
+      initial={{ opacity: 0, y: -12 }}
+      animate={{
+        opacity: 1,
+        y: [0, -2.5, 0],
+      }}
+      transition={{
+        opacity: { duration: 0.5, ease: 'easeOut' },
+        y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 },
+      }}
+      whileHover={{
+        y: -2,
+        boxShadow: '0 8px 28px rgba(201,162,77,0.35), 0 2px 8px rgba(0,0,0,0.18)',
+        scale: 1.03,
+      }}
+      whileTap={{ scale: 0.96 }}
+    >
+      Entrar
+    </motion.button>
   );
 }
