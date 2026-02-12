@@ -1,49 +1,49 @@
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
-  ShoppingCart, 
-  Clock, 
-  Palette,
+  ImagePlus, 
+  LayoutDashboard, 
+  Users,
   BarChart3,
-  Shield
+  Link2
 } from 'lucide-react';
 
 const features = [
   {
-    icon: ShoppingCart,
-    title: 'Catálogo Digital',
-    description: 'Crie seu cardápio online com fotos, preços e descrições. Atualiza em segundos!',
-  },
-  {
     icon: MessageSquare,
-    title: 'Pedidos via WhatsApp',
-    description: 'Cliente faz pedido e envia direto no seu WhatsApp. Sem apps extras.',
+    title: 'Pedidos direto no WhatsApp',
+    description: 'Cliente escolhe, confirma e envia tudo pelo WhatsApp. Sem apps extras.',
   },
   {
-    icon: Clock,
-    title: 'Controle de Entregas',
-    description: 'Organize pedidos por data e horário de entrega. Nunca mais esqueça!',
+    icon: ImagePlus,
+    title: 'Upload de fotos e vídeos',
+    description: 'Até 10 fotos e vídeos por pedido. Referências visuais que evitam erros.',
   },
   {
-    icon: Palette,
-    title: 'Sua Marca, Seu Estilo',
-    description: 'Personalize cores, logo e imagem de capa. Deixe com a cara do seu negócio.',
+    icon: LayoutDashboard,
+    title: 'Dashboard inteligente',
+    description: 'Resumo do dia, métricas animadas e lista de pedidos — tudo num só lugar.',
+  },
+  {
+    icon: Users,
+    title: 'Clientes organizados',
+    description: 'Base de clientes automática. Veja histórico e dados de cada cliente.',
   },
   {
     icon: BarChart3,
-    title: 'Relatórios Simples',
-    description: 'Veja seus pedidos e ganhos do dia, semana ou mês. Tudo organizado.',
+    title: 'Estatísticas em tempo real',
+    description: 'Receita, pedidos e produtos mais vendidos. Gráficos simples e elegantes.',
   },
   {
-    icon: Shield,
-    title: 'Simples e Seguro',
-    description: 'Sem dados do cliente expostos. Você controla tudo pelo painel admin.',
+    icon: Link2,
+    title: 'Link personalizado',
+    description: 'Seu link exclusivo para partilhar no Instagram, WhatsApp e Facebook.',
   },
 ];
 
 export function Features() {
   return (
-    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0B0D12' }}>
+    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0F172A' }}>
       <div className="container mx-auto px-4 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -53,10 +53,14 @@ export function Features() {
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4" style={{ color: '#FFFFFF' }}>
             Tudo que você precisa para{' '}
-            <span style={{ color: '#FF7A1A' }}>vender mais</span>
+            <span style={{
+              background: 'linear-gradient(135deg, #F97316, #3B82F6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>vender mais</span>
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#B8C0D4' }}>
-            Ferramentas simples para transformar seu negócio. Sem complicação, sem taxas escondidas.
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#CBD5E1' }}>
+            Ferramentas poderosas num sistema simples. Sem complicação, sem taxas escondidas.
           </p>
         </motion.div>
 
@@ -68,15 +72,15 @@ export function Features() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="group p-6 rounded-[22px] border transition-all duration-300"
+              whileHover={{ y: -4, scale: 1.03, transition: { duration: 0.2 } }}
+              className="group p-6 rounded-[22px] border backdrop-blur-xl transition-all duration-300 cursor-pointer"
               style={{
-                backgroundColor: '#121827',
+                backgroundColor: 'rgba(255,255,255,0.05)',
                 borderColor: 'rgba(255,255,255,0.08)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255,122,26,0.25)';
-                e.currentTarget.style.boxShadow = '0 8px 32px -8px rgba(255,122,26,0.15)';
+                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)';
+                e.currentTarget.style.boxShadow = '0 8px 32px -8px rgba(249,115,22,0.2)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -85,14 +89,14 @@ export function Features() {
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-                style={{ background: 'linear-gradient(135deg, rgba(255,122,26,0.15), rgba(255,122,26,0.05))' }}
+                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(59,130,246,0.1))' }}
               >
-                <feature.icon className="w-6 h-6" style={{ color: '#FF7A1A' }} />
+                <feature.icon className="w-6 h-6" style={{ color: '#F97316' }} />
               </div>
               <h3 className="text-lg font-display font-bold mb-2" style={{ color: '#FFFFFF' }}>
                 {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#B8C0D4' }}>
+              <p className="text-sm leading-relaxed" style={{ color: '#CBD5E1' }}>
                 {feature.description}
               </p>
             </motion.div>
