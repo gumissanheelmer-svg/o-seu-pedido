@@ -11,53 +11,49 @@ interface NavbarProps {
 export function Navbar({ dark }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const bg = dark ? 'rgba(11,13,18,0.85)' : undefined;
-  const borderColor = dark ? 'rgba(255,255,255,0.08)' : undefined;
-  const textColor = dark ? '#FFFFFF' : undefined;
-  const mutedColor = dark ? '#B8C0D4' : undefined;
-
+  // Always dark now for landing
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-lg ${!dark ? 'bg-background/80 border-b border-border/50' : ''}`}
-      style={dark ? { backgroundColor: bg, borderBottom: `1px solid ${borderColor}` } : undefined}
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
+      style={{
+        backgroundColor: 'rgba(11,13,18,0.85)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #FF7A1A, #FF9A4A)' }}
+            >
               <ShoppingBag className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-display font-bold" style={dark ? { color: textColor } : undefined}>
-              {!dark && <span className="text-foreground">Encomendas</span>}
-              {dark && 'Encomendas'}
+            <span className="text-xl font-display font-bold" style={{ color: '#FFFFFF' }}>
+              Encomendas
             </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/sobre" className="font-medium transition-colors" style={dark ? { color: mutedColor } : undefined}>
-              {!dark && <span className="text-muted-foreground hover:text-foreground">Sobre</span>}
-              {dark && 'Sobre'}
-            </Link>
-            <Link to="/precos" className="font-medium transition-colors" style={dark ? { color: mutedColor } : undefined}>
-              {!dark && <span className="text-muted-foreground hover:text-foreground">Preços</span>}
-              {dark && 'Preços'}
-            </Link>
+            <Link to="/sobre" className="font-medium transition-colors hover:text-white" style={{ color: '#B8C0D4' }}>Sobre</Link>
+            <Link to="/precos" className="font-medium transition-colors hover:text-white" style={{ color: '#B8C0D4' }}>Preços</Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
             <Link to="/entrar">
-              <Button variant="ghost" style={dark ? { color: '#FFFFFF' } : undefined}>Entrar</Button>
+              <Button variant="ghost" style={{ color: '#FFFFFF' }}>Entrar</Button>
             </Link>
             <Link to="/registar">
-              <Button variant="hero">Criar Loja Grátis</Button>
+              <Button
+                className="font-semibold text-white border-0"
+                style={{ background: 'linear-gradient(135deg, #FF7A1A, #FF9A4A)' }}
+              >
+                Criar Loja Grátis
+              </Button>
             </Link>
           </div>
 
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2"
-            style={dark ? { color: '#FFFFFF' } : undefined}
-          >
+          <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2" style={{ color: '#FFFFFF' }}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -69,25 +65,19 @@ export function Navbar({ dark }: NavbarProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className={!dark ? 'md:hidden bg-background border-b border-border' : 'md:hidden'}
-            style={dark ? { backgroundColor: '#0B0D12', borderBottom: '1px solid rgba(255,255,255,0.08)' } : undefined}
+            className="md:hidden"
+            style={{ backgroundColor: '#0B0D12', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
           >
             <div className="container mx-auto px-4 py-4 space-y-4">
-              <Link to="/sobre" className="block font-medium" style={dark ? { color: '#B8C0D4' } : undefined} onClick={() => setIsOpen(false)}>
-                {!dark && <span className="text-muted-foreground">Sobre</span>}
-                {dark && 'Sobre'}
-              </Link>
-              <Link to="/precos" className="block font-medium" style={dark ? { color: '#B8C0D4' } : undefined} onClick={() => setIsOpen(false)}>
-                {!dark && <span className="text-muted-foreground">Preços</span>}
-                {dark && 'Preços'}
-              </Link>
-              <hr style={dark ? { borderColor: 'rgba(255,255,255,0.08)' } : undefined} className={!dark ? 'border-border' : ''} />
+              <Link to="/sobre" className="block font-medium hover:text-white" style={{ color: '#B8C0D4' }} onClick={() => setIsOpen(false)}>Sobre</Link>
+              <Link to="/precos" className="block font-medium hover:text-white" style={{ color: '#B8C0D4' }} onClick={() => setIsOpen(false)}>Preços</Link>
+              <hr style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
               <div className="flex flex-col gap-2">
                 <Link to="/entrar" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full" style={dark ? { borderColor: 'rgba(255,255,255,0.15)', color: '#FFFFFF' } : undefined}>Entrar</Button>
+                  <Button variant="outline" className="w-full" style={{ borderColor: 'rgba(255,255,255,0.15)', color: '#FFFFFF' }}>Entrar</Button>
                 </Link>
                 <Link to="/registar" onClick={() => setIsOpen(false)}>
-                  <Button variant="hero" className="w-full">Criar Loja Grátis</Button>
+                  <Button className="w-full font-semibold text-white border-0" style={{ background: 'linear-gradient(135deg, #FF7A1A, #FF9A4A)' }}>Criar Loja Grátis</Button>
                 </Link>
               </div>
             </div>

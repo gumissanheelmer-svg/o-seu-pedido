@@ -62,7 +62,7 @@ const faqs = [
 const Pricing = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0B0D12', color: '#FFFFFF' }}>
-      <Navbar dark />
+      <Navbar />
 
       <main className="pt-28 pb-20">
         {/* Hero */}
@@ -221,7 +221,7 @@ const Pricing = () => {
         </section>
       </main>
 
-      <Footer dark />
+      <Footer />
     </div>
   );
 };
