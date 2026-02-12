@@ -9,7 +9,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0B0D12' }}>
+    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0F172A' }}>
       <div className="container mx-auto px-4 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -18,9 +18,14 @@ export function HowItWorks() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4" style={{ color: '#FFFFFF' }}>
-            Como <span style={{ color: '#FF7A1A' }}>funciona?</span>
+            Como{' '}
+            <span style={{
+              background: 'linear-gradient(135deg, #F97316, #3B82F6)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>funciona?</span>
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#B8C0D4' }}>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#CBD5E1' }}>
             4 passos simples para receber pedidos organizados
           </p>
         </motion.div>
@@ -36,14 +41,14 @@ export function HowItWorks() {
               className="relative text-center lg:text-left"
             >
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-px" style={{ background: 'linear-gradient(to right, rgba(249,115,22,0.3), transparent)' }} />
               )}
               <div className="relative z-10">
                 <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0"
                   style={{
-                    background: 'linear-gradient(135deg, #FF7A1A, #FF9A4A)',
-                    boxShadow: '0 0 30px -8px rgba(255,122,26,0.4)',
+                    background: 'linear-gradient(135deg, #F97316, #3B82F6)',
+                    boxShadow: '0 0 30px -8px rgba(249,115,22,0.4)',
                   }}
                 >
                   <span className="text-2xl font-display font-bold text-white">{step.number}</span>
@@ -51,7 +56,7 @@ export function HowItWorks() {
                 <h3 className="text-lg font-display font-bold mb-2" style={{ color: '#FFFFFF' }}>
                   {step.title}
                 </h3>
-                <p className="text-sm" style={{ color: '#B8C0D4' }}>
+                <p className="text-sm" style={{ color: '#CBD5E1' }}>
                   {step.description}
                 </p>
               </div>
