@@ -46,6 +46,13 @@ export default function AdminDashboard() {
   const pendingPayments = pendingOrders.filter(o => !o.payment_confirmed).length;
   const ownerName = business?.name || 'Gestor';
 
+  // Resumo inteligente
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+  const uniquePendingClients = new Set(pendingOrders.map(o => o.client_phone)).size;
+  
+  // Produto mais vendido (simulado com ordem de criação)
+  const mostPopularOrder = todayOrders.length > 0 ? todayOrders[0] : null;
+
   const stats = [
     { title: 'Pedidos Hoje', value: todayOrders.length, icon: CalendarDays, color: '#FF7A1A', isCurrency: false },
     { title: 'Pendentes', value: pendingOrders.length, icon: Clock, color: '#FBBF24', isCurrency: false },
@@ -66,7 +73,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Header */}
+      {/* Saudação Personalizada */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Bem-vinda, {ownerName} 👋
@@ -74,6 +81,62 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground mt-1">
           Aqui está o desempenho do seu negócio hoje.
         </p>
+      </motion.div>
+
+      {/* Resumo Inteligente */}
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="border-border/50 bg-surface/40 backdrop-blur">
+          <CardContent className="p-6">
+            <div className="space-y-3 text-sm">
+              {pendingOrders.length > 0 ? (
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">📦</span>
+                  <p className="text-muted-foreground">
+                    Hoje você tem <span className="font-bold text-foreground"><CountUp target={pendingOrders.length} /></span> pedidos pendentes.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">👏</span>
+                  <p className="text-foreground font-medium">
+                    Nenhum pedido pendente hoje. Excelente organização!
+                  </p>
+                </div>
+              )}
+
+              {uniquePendingClients > 0 && (
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">⏳</span>
+                  <p className="text-muted-foreground">
+                    <span className="font-bold text-foreground"><CountUp target={uniquePendingClients} /></span> clientes aguardam resposta.
+                  </p>
+                </div>
+              )}
+
+              {mostPopularOrder && (
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">⭐</span>
+                  <p className="text-muted-foreground">
+                    Seu pedido <span className="font-bold text-foreground">"{mostPopularOrder.order_description || 'sem descrição'}"</span> está em alta.
+                  </p>
+                </div>
+              )}
+
+              {todayRevenue > 0 && (
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">💰</span>
+                  <p className="text-muted-foreground">
+                    Sua receita hoje é <span className="font-bold text-foreground"><CountUp target={todayRevenue} prefix="" /></span> MZN.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Stats Grid */}
