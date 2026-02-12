@@ -1,71 +1,57 @@
 import { motion } from 'framer-motion';
 
 const steps = [
-  {
-    number: '01',
-    title: 'Cadastre seu negócio',
-    description: 'Em 5 minutos você cria sua loja e adiciona seus produtos.',
-  },
-  {
-    number: '02',
-    title: 'Partilhe o link',
-    description: 'Envie o link da sua loja no WhatsApp, Instagram ou Facebook.',
-  },
-  {
-    number: '03',
-    title: 'Cliente escolhe',
-    description: 'Ele vê seus produtos, seleciona o que quer e confirma o pedido.',
-  },
-  {
-    number: '04',
-    title: 'Você recebe no WhatsApp',
-    description: 'Pedido organizado com nome, itens, data e total. Só confirmar!',
-  },
+  { number: '01', title: 'Cadastre seu negócio', description: 'Em 5 minutos você cria sua loja e adiciona seus produtos.' },
+  { number: '02', title: 'Partilhe o link', description: 'Envie o link da sua loja no WhatsApp, Instagram ou Facebook.' },
+  { number: '03', title: 'Cliente escolhe', description: 'Ele vê seus produtos, seleciona o que quer e confirma o pedido.' },
+  { number: '04', title: 'Você recebe no WhatsApp', description: 'Pedido organizado com nome, itens, data e total. Só confirmar!' },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="py-20 lg:py-32 bg-background">
-      <div className="container mx-auto px-4">
+    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0B0D12' }}>
+      <div className="container mx-auto px-4 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-4">
-            Como <span className="text-primary">funciona?</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4" style={{ color: '#FFFFFF' }}>
+            Como <span style={{ color: '#FF7A1A' }}>funciona?</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#B8C0D4' }}>
             4 passos simples para receber pedidos organizados
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((step, index) => (
             <motion.div
               key={step.number}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.15 }}
-              className="relative"
+              transition={{ delay: index * 0.12 }}
+              className="relative text-center lg:text-left"
             >
-              {/* Connector line */}
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-0.5 bg-border" />
+                <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
               )}
-
               <div className="relative z-10">
-                <div className="w-20 h-20 rounded-2xl gradient-hero flex items-center justify-center mb-6 mx-auto lg:mx-0 shadow-glow">
-                  <span className="text-2xl font-display font-bold text-white">
-                    {step.number}
-                  </span>
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #FF7A1A, #FF9A4A)',
+                    boxShadow: '0 0 30px -8px rgba(255,122,26,0.4)',
+                  }}
+                >
+                  <span className="text-2xl font-display font-bold text-white">{step.number}</span>
                 </div>
-                <h3 className="text-xl font-display font-bold text-foreground mb-2 text-center lg:text-left">
+                <h3 className="text-lg font-display font-bold mb-2" style={{ color: '#FFFFFF' }}>
                   {step.title}
                 </h3>
-                <p className="text-muted-foreground text-center lg:text-left">
+                <p className="text-sm" style={{ color: '#B8C0D4' }}>
                   {step.description}
                 </p>
               </div>
