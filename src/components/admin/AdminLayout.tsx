@@ -10,7 +10,8 @@ import {
   X,
   Store,
   Users,
-  XCircle
+  XCircle,
+  Wallet
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/admin/encomendas', icon: ShoppingBag, label: 'Encomendas' },
   { path: '/admin/produtos', icon: Package, label: 'Produtos' },
   { path: '/admin/clientes', icon: Users, label: 'Clientes' },
+  { path: '/admin/despesas', icon: Wallet, label: 'Despesas' },
   { path: '/admin/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 

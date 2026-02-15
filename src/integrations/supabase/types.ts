@@ -301,6 +301,50 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          business_id: string
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          business_id: string
+          category?: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       impersonate_sessions: {
         Row: {
           active: boolean
