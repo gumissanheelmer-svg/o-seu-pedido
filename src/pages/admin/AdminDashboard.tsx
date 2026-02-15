@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShoppingBag, Clock, CheckCircle, TrendingUp, Package, CalendarDays, 
-  ChevronRight, User, ArrowUpRight, BarChart3, Users, Star
+  ChevronRight, User, ArrowUpRight, BarChart3, Users, Star, Wallet
 } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
+import { useExpenses } from '@/hooks/useExpenses';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useProducts } from '@/hooks/useProducts';
 import { useCustomers } from '@/hooks/useCustomers';
@@ -89,6 +90,7 @@ export default function AdminDashboard() {
   const { orders, isLoading, pendingOrders, confirmedOrders, todayOrders, weekOrders } = useOrders();
   const { products } = useProducts();
   const { customers } = useCustomers();
+  const { totalMonth: expensesTotal, byCategory: expensesByCategory, monthExpenses } = useExpenses();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('7d');
 
   const ownerName = business?.name || 'Gestor';
@@ -409,6 +411,69 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* ── Expenses Summary ── */}
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
+        <div className="rounded-2xl border p-5" style={glassCard}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4" style={{ color: '#F87171' }} />
+              <h3 className="font-semibold text-sm text-foreground">Despesas do Mês</h3>
+            </div>
+            <Link to="/admin/despesas">
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
+                Ver Todas <ChevronRight className="w-3 h-3" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex items-baseline gap-2 mb-4">
+            <span className="text-2xl font-bold text-foreground">
+              <CountUp target={expensesTotal} /> <span className="text-xs text-muted-foreground font-normal">MZN</span>
+            </span>
+            <span className="text-xs text-muted-foreground">({monthExpenses.length} registos)</span>
+          </div>
+
+          {expensesByCategory.length > 0 ? (
+            <div className="space-y-2.5">
+              {expensesByCategory.map((cat) => {
+                const pct = expensesTotal > 0 ? (cat.total / expensesTotal) * 100 : 0;
+                return (
+                  <div key={cat.value}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">{cat.label}</span>
+                      <span className="font-medium text-foreground">{formatCurrency(cat.total)}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: '#F87171' }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, delay: 0.1 }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Nenhuma despesa registada este mês.</p>
+          )}
+
+          {/* Profit indicator */}
+          {totalRevenue > 0 && (
+            <div className="mt-4 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Lucro estimado (7d)</span>
+                <span className={`font-bold ${totalRevenue - expensesTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {formatCurrency(totalRevenue - expensesTotal)} MZN
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* ── Public Link ── */}
       {business && (
