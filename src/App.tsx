@@ -24,6 +24,7 @@ import Orders from "./pages/admin/Orders";
 import Products from "./pages/admin/Products";
 import Settings from "./pages/admin/Settings";
 import Customers from "./pages/admin/Customers";
+import Expenses from "./pages/admin/Expenses";
 
 // Super Admin Pages
 import { SuperAdminLayout } from "./components/superadmin/SuperAdminLayout";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="encomendas" element={<Orders />} />
             <Route path="produtos" element={<Products />} />
             <Route path="clientes" element={<Customers />} />
+            <Route path="despesas" element={<Expenses />} />
             <Route path="configuracoes" element={<Settings />} />
           </Route>
 
