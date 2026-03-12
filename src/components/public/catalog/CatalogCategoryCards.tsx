@@ -76,8 +76,7 @@ export function CatalogCategoryCards({ categories, onSelectCategory, selectedCat
                     : 'glass-card hover:border-white/20'
                 }`}
                 style={isSelected ? {
-                  ringColor: primaryColor,
-                  boxShadow: `0 0 30px -5px ${primaryColor}40`,
+                  boxShadow: `0 0 30px -5px ${primaryColor}40, 0 0 0 2px ${primaryColor}`,
                   borderColor: `${primaryColor}60`,
                 } : {}}
               >
