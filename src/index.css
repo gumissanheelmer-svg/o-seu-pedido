@@ -304,7 +304,7 @@
   /* Focus ring gold */
   .focus-ring-gold:focus {
     @apply outline-none ring-2 ring-offset-2;
-    ring-color: hsl(43 74% 49%);
+    ring-color: hsl(270 70% 55%);
     ring-offset-color: hsl(var(--background));
   }
 
