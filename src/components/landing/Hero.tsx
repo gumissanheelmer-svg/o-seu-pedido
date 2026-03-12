@@ -14,20 +14,20 @@ const fadeUp = {
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #0F172A 100%)' }}>
+    <section className="relative min-h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0b0f1a 0%, #121826 40%, #1a1330 100%)' }}>
       {/* Mesh grid */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
         }}
       />
 
       {/* Glow blobs */}
-      <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-20" style={{ backgroundColor: '#F97316' }} />
-      <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] rounded-full blur-[130px] opacity-15" style={{ backgroundColor: '#3B82F6' }} />
-      <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] opacity-10" style={{ backgroundColor: '#F97316' }} />
+      <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-20" style={{ backgroundColor: '#c44cff' }} />
+      <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] rounded-full blur-[130px] opacity-15" style={{ backgroundColor: '#ff4d8d' }} />
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] opacity-10" style={{ backgroundColor: '#7b5cff' }} />
 
       <div className="container relative z-10 mx-auto px-4 py-24 lg:py-36">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -39,10 +39,10 @@ export function Hero() {
               initial="hidden"
               animate="visible"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-8"
-              style={{ borderColor: 'rgba(249,115,22,0.3)', backgroundColor: 'rgba(249,115,22,0.08)' }}
+              style={{ borderColor: 'rgba(196,76,255,0.3)', backgroundColor: 'rgba(196,76,255,0.08)' }}
             >
-              <Zap className="w-4 h-4" style={{ color: '#F97316' }} />
-              <span className="text-sm font-medium" style={{ color: '#F97316' }}>Sistema de Pedidos Premium</span>
+              <Zap className="w-4 h-4" style={{ color: '#c44cff' }} />
+              <span className="text-sm font-medium" style={{ color: '#c44cff' }}>Sistema de Pedidos Premium</span>
             </motion.div>
 
             <motion.h1
@@ -55,7 +55,7 @@ export function Hero() {
             >
               Transforme cada pedido em uma{' '}
               <span style={{
-                background: 'linear-gradient(135deg, #F97316, #3B82F6)',
+                background: 'linear-gradient(135deg, #ff4d8d, #c44cff, #7b5cff)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
@@ -70,7 +70,7 @@ export function Hero() {
               initial="hidden"
               animate="visible"
               className="text-lg md:text-xl mb-10 max-w-xl mx-auto lg:mx-0"
-              style={{ color: '#CBD5E1' }}
+              style={{ color: '#94a3b8' }}
             >
               Receba encomendas organizadas, com fotos, detalhes e confirmação profissional — tudo direto no WhatsApp.
             </motion.p>
@@ -85,10 +85,10 @@ export function Hero() {
               <Link to="/registar">
                 <Button
                   size="xl"
-                  className="relative overflow-hidden font-bold text-white border-0 transition-all duration-300 hover:scale-[1.02]"
+                  className="relative overflow-hidden font-bold text-white border-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_35px_-5px_rgba(196,76,255,0.5)]"
                   style={{
-                    background: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)',
-                    boxShadow: '0 0 40px -5px rgba(249,115,22,0.5)',
+                    background: 'linear-gradient(90deg, #ff4d8d, #c44cff)',
+                    boxShadow: '0 0 40px -5px rgba(196,76,255,0.4)',
                   }}
                 >
                   Criar Loja Grátis
@@ -99,7 +99,7 @@ export function Hero() {
                 <Button
                   variant="outline"
                   size="xl"
-                  className="transition-all duration-300 hover:scale-[1.02]"
+                  className="transition-all duration-300 hover:scale-[1.02] hover:border-[rgba(196,76,255,0.3)]"
                   style={{
                     borderColor: 'rgba(255,255,255,0.15)',
                     color: '#FFFFFF',
@@ -124,7 +124,7 @@ export function Hero() {
                 'Pronto em 5 minutos',
                 'Funciona no WhatsApp',
               ].map((benefit) => (
-                <div key={benefit} className="flex items-center gap-2 text-sm" style={{ color: '#CBD5E1' }}>
+                <div key={benefit} className="flex items-center gap-2 text-sm" style={{ color: '#94a3b8' }}>
                   <CheckCircle className="w-4 h-4" style={{ color: '#4ADE80' }} />
                   {benefit}
                 </div>
@@ -132,7 +132,7 @@ export function Hero() {
             </motion.div>
           </div>
 
-          {/* Right — Storm-style floating mockup */}
+          {/* Right — floating mockup */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -148,19 +148,19 @@ export function Hero() {
               <div
                 className="rounded-[28px] p-6 border backdrop-blur-xl"
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), 0 0 40px -10px rgba(59,130,246,0.15)',
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  borderColor: 'rgba(255,255,255,0.08)',
+                  boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), 0 0 50px -15px rgba(196,76,255,0.15)',
                 }}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #F97316, #FB923C)' }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff4d8d, #c44cff)' }}>
                     <span className="text-2xl">🍰</span>
                   </div>
                   <div>
                     <h3 className="font-bold" style={{ color: '#FFFFFF' }}>Bolos da Maria</h3>
-                    <p className="text-xs" style={{ color: '#CBD5E1' }}>Encomendas abertas</p>
+                    <p className="text-xs" style={{ color: '#94a3b8' }}>Encomendas abertas</p>
                   </div>
                 </div>
 
@@ -185,12 +185,12 @@ export function Hero() {
                       <span className="text-2xl">{product.emoji}</span>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm" style={{ color: '#FFFFFF' }}>{product.name}</p>
-                        <p className="font-bold text-sm" style={{ color: '#F97316' }}>{product.price}</p>
+                        <p className="font-bold text-sm" style={{ color: '#ff4d8d' }}>{product.price}</p>
                       </div>
                       <Button
                         size="sm"
                         className="h-8 w-8 p-0 rounded-lg text-white border-0"
-                        style={{ background: 'linear-gradient(135deg, #F97316, #FB923C)' }}
+                        style={{ background: 'linear-gradient(135deg, #ff4d8d, #c44cff)' }}
                       >
                         +
                       </Button>
@@ -206,9 +206,9 @@ export function Hero() {
                   className="mt-5"
                 >
                   <Button
-                    className="w-full font-bold text-white border-0 rounded-xl"
+                    className="w-full font-bold text-white border-0 rounded-xl transition-all duration-300 hover:shadow-[0_0_25px_-5px_rgba(196,76,255,0.4)]"
                     size="lg"
-                    style={{ background: 'linear-gradient(135deg, #F97316, #FB923C)', boxShadow: '0 0 25px -5px rgba(249,115,22,0.4)' }}
+                    style={{ background: 'linear-gradient(90deg, #ff4d8d, #c44cff)', boxShadow: '0 0 25px -5px rgba(255,77,141,0.3)' }}
                   >
                     <Smartphone className="w-4 h-4" />
                     Enviar Pedido via WhatsApp
@@ -222,12 +222,12 @@ export function Hero() {
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -top-4 -right-4 flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-xl"
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.06)',
-                  borderColor: 'rgba(255,255,255,0.1)',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  borderColor: 'rgba(255,255,255,0.08)',
                   boxShadow: '0 8px 24px -6px rgba(0,0,0,0.4)',
                 }}
               >
-                <Camera className="w-4 h-4" style={{ color: '#3B82F6' }} />
+                <Camera className="w-4 h-4" style={{ color: '#7b5cff' }} />
                 <span className="text-xs font-medium" style={{ color: '#FFFFFF' }}>10 fotos</span>
               </motion.div>
 
@@ -236,8 +236,8 @@ export function Hero() {
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -bottom-3 -left-4 flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-xl"
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.06)',
-                  borderColor: 'rgba(255,255,255,0.1)',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  borderColor: 'rgba(255,255,255,0.08)',
                   boxShadow: '0 8px 24px -6px rgba(0,0,0,0.4)',
                 }}
               >
@@ -251,13 +251,13 @@ export function Hero() {
                 transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute top-1/2 -right-8 flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-xl"
                 style={{
-                  backgroundColor: 'rgba(249,115,22,0.1)',
-                  borderColor: 'rgba(249,115,22,0.2)',
-                  boxShadow: '0 8px 24px -6px rgba(249,115,22,0.2)',
+                  backgroundColor: 'rgba(196,76,255,0.08)',
+                  borderColor: 'rgba(196,76,255,0.2)',
+                  boxShadow: '0 8px 24px -6px rgba(196,76,255,0.15)',
                 }}
               >
-                <Star className="w-4 h-4" style={{ color: '#F97316' }} />
-                <span className="text-xs font-medium" style={{ color: '#F97316' }}>Premium</span>
+                <Star className="w-4 h-4" style={{ color: '#c44cff' }} />
+                <span className="text-xs font-medium" style={{ color: '#c44cff' }}>Premium</span>
               </motion.div>
             </motion.div>
           </motion.div>

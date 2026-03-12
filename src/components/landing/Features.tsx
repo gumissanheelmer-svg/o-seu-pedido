@@ -43,7 +43,7 @@ const features = [
 
 export function Features() {
   return (
-    <section className="py-20 lg:py-28" style={{ backgroundColor: '#0F172A' }}>
+    <section className="py-20 lg:py-28" style={{ background: 'linear-gradient(180deg, #0b0f1a 0%, #121826 100%)' }}>
       <div className="container mx-auto px-4 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -54,12 +54,12 @@ export function Features() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4" style={{ color: '#FFFFFF' }}>
             Tudo que você precisa para{' '}
             <span style={{
-              background: 'linear-gradient(135deg, #F97316, #3B82F6)',
+              background: 'linear-gradient(135deg, #ff4d8d, #c44cff)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>vender mais</span>
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#CBD5E1' }}>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#94a3b8' }}>
             Ferramentas poderosas num sistema simples. Sem complicação, sem taxas escondidas.
           </p>
         </motion.div>
@@ -75,12 +75,12 @@ export function Features() {
               whileHover={{ y: -4, scale: 1.03, transition: { duration: 0.2 } }}
               className="group p-6 rounded-[22px] border backdrop-blur-xl transition-all duration-300 cursor-pointer"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
                 borderColor: 'rgba(255,255,255,0.08)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)';
-                e.currentTarget.style.boxShadow = '0 8px 32px -8px rgba(249,115,22,0.2)';
+                e.currentTarget.style.borderColor = 'rgba(196,76,255,0.3)';
+                e.currentTarget.style.boxShadow = '0 8px 32px -8px rgba(196,76,255,0.15)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
@@ -89,14 +89,14 @@ export function Features() {
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-                style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(59,130,246,0.1))' }}
+                style={{ background: 'linear-gradient(135deg, rgba(255,77,141,0.15), rgba(196,76,255,0.1))' }}
               >
-                <feature.icon className="w-6 h-6" style={{ color: '#F97316' }} />
+                <feature.icon className="w-6 h-6" style={{ color: '#ff4d8d' }} />
               </div>
               <h3 className="text-lg font-display font-bold mb-2" style={{ color: '#FFFFFF' }}>
                 {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#CBD5E1' }}>
+              <p className="text-sm leading-relaxed" style={{ color: '#94a3b8' }}>
                 {feature.description}
               </p>
             </motion.div>
