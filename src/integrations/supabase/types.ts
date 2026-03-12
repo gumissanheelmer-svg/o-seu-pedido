@@ -226,6 +226,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           name: string
           sort_order: number | null
           updated_at: string
@@ -236,6 +237,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
           sort_order?: number | null
           updated_at?: string
@@ -246,6 +248,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           sort_order?: number | null
           updated_at?: string
@@ -253,6 +256,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "categories_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_reviews: {
+        Row: {
+          approved: boolean
+          business_id: string
+          comment: string | null
+          created_at: string
+          customer_name: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          approved?: boolean
+          business_id: string
+          comment?: string | null
+          created_at?: string
+          customer_name: string
+          id?: string
+          rating?: number
+        }
+        Update: {
+          approved?: boolean
+          business_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_name?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reviews_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"

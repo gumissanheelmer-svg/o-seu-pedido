@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Store } from 'lucide-react';
 import { usePublicBusiness } from '@/hooks/useBusiness';
 import { usePublicProducts, ProductWithOptions } from '@/hooks/useProducts';
 import { usePublicCategories } from '@/hooks/useCategories';
-import { Button } from '@/components/ui/button';
+import { usePublicReviews, usePopularProducts } from '@/hooks/usePublicCatalog';
 import { ProductDetailModal } from '@/components/public/ProductDetailModal';
 import { HeroParallax } from '@/components/public/HeroParallax';
 import { CatalogEmptyState } from '@/components/public/CatalogEmptyState';
@@ -15,46 +15,50 @@ import { CatalogStickyHeader } from '@/components/public/CatalogStickyHeader';
 import { SkeletonHero, SkeletonGrid } from '@/components/public/animations/SkeletonCard';
 import { staggerContainer } from '@/components/public/animations/MotionComponents';
 import { AdminAccessButton } from '@/components/public/AdminAccessButton';
+import { CatalogCategoryCards } from '@/components/public/catalog/CatalogCategoryCards';
+import { PopularProducts } from '@/components/public/catalog/PopularProducts';
+import { CustomerReviews } from '@/components/public/catalog/CustomerReviews';
+import { AboutSection } from '@/components/public/catalog/AboutSection';
+import { PhotoGallery } from '@/components/public/catalog/PhotoGallery';
+import { CatalogFooter } from '@/components/public/catalog/CatalogFooter';
 
 export default function PublicCatalogPage() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { data: business, isLoading: businessLoading, error: businessError } = usePublicBusiness(slug || '');
   const { data: products, isLoading: productsLoading } = usePublicProducts(business?.id || '');
   const { data: categories } = usePublicCategories(business?.id || '');
+  const { data: reviews } = usePublicReviews(business?.id || '');
+  const { data: popularProducts } = usePopularProducts(business?.id || '');
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductWithOptions | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const primaryColor = business?.primary_color || '#C9A24D';
 
-  // Loading state with skeleton
+  // Loading
   if (businessLoading || productsLoading) {
     return (
       <div className="min-h-screen theme-premium-dark bg-background">
         <SkeletonHero />
-        <div className="container max-w-4xl mx-auto px-4 py-8">
+        <div className="container max-w-5xl mx-auto px-4 py-8">
           <SkeletonGrid count={6} />
         </div>
       </div>
     );
   }
 
-  // Error state
+  // Error
   if (businessError || !business) {
     return (
       <div className="min-h-screen theme-premium-dark bg-background flex items-center justify-center">
-        <motion.div 
-          className="text-center max-w-md px-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div className="text-center max-w-md px-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="w-20 h-20 rounded-2xl glass mx-auto mb-4 flex items-center justify-center">
             <Store className="w-10 h-10 text-muted-foreground" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Negócio Indisponível</h1>
-          <p className="text-muted-foreground">
-            Este negócio está temporariamente indisponível ou não existe.
-          </p>
+          <p className="text-muted-foreground">Este negócio está temporariamente indisponível ou não existe.</p>
         </motion.div>
       </div>
     );
@@ -72,9 +76,7 @@ export default function PublicCatalogPage() {
     return acc;
   }, {} as Record<string, { name: string; products: ProductWithOptions[] }>) || {};
 
-  // Products without category
   const uncategorizedProducts = products?.filter(p => !p.category_id) || [];
-
   const hasProducts = products && products.length > 0;
 
   const handleWhatsAppClick = () => {
@@ -84,148 +86,173 @@ export default function PublicCatalogPage() {
     window.open(`https://wa.me/${formattedPhone}?text=${text}`, '_blank');
   };
 
+  const scrollToMenu = () => {
+    menuRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleOrderClick = () => {
+    navigate(`/loja/${slug}/encomendar`);
+  };
+
   return (
     <div className="min-h-screen theme-premium-dark bg-background flex flex-col">
-      {/* Hero Section with Parallax */}
       <AdminAccessButton />
-      <HeroParallax business={business} />
+      
+      {/* Hero with CTAs */}
+      <HeroParallax 
+        business={business}
+        onViewMenu={scrollToMenu}
+        onOrder={handleOrderClick}
+        onWhatsApp={business.whatsapp_number ? handleWhatsAppClick : undefined}
+      />
 
       {/* Sticky Header */}
       <CatalogStickyHeader business={business} />
 
-      {/* Category Filter */}
+      {/* Category Cards */}
       {categories && categories.length > 0 && hasProducts && (
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <motion.div 
-            className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Button
-              variant={selectedCategory === null ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-              className={`rounded-xl shrink-0 ${
-                selectedCategory === null 
-                  ? 'border-0' 
-                  : 'border-white/10 bg-white/5 hover:bg-white/10'
-              }`}
-              style={selectedCategory === null ? { backgroundColor: primaryColor, color: 'hsl(225 25% 6%)' } : {}}
-            >
-              Todos
-            </Button>
-            {categories.map((cat) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`whitespace-nowrap rounded-xl shrink-0 ${
-                  selectedCategory === cat.id 
-                    ? 'border-0' 
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
-                }`}
-                style={selectedCategory === cat.id ? { backgroundColor: primaryColor, color: 'hsl(225 25% 6%)' } : {}}
-              >
-                {cat.name}
-              </Button>
-            ))}
-          </motion.div>
+        <CatalogCategoryCards
+          categories={categories}
+          onSelectCategory={setSelectedCategory}
+          selectedCategory={selectedCategory}
+          primaryColor={primaryColor}
+        />
+      )}
+
+      {/* Popular Products */}
+      {!selectedCategory && popularProducts && popularProducts.length > 0 && (
+        <PopularProducts
+          products={popularProducts as ProductWithOptions[]}
+          onProductClick={setSelectedProduct}
+          primaryColor={primaryColor}
+        />
+      )}
+
+      {/* Divider */}
+      {hasProducts && (
+        <div className="container max-w-5xl mx-auto px-4">
+          <div className="h-px" style={{ background: `linear-gradient(to right, transparent, ${primaryColor}30, transparent)` }} />
         </div>
       )}
 
-      {/* Main Content */}
-      {!hasProducts ? (
-        <CatalogEmptyState business={business} />
-      ) : (
-        <main className="container max-w-4xl mx-auto px-4 pb-28 flex-1">
-          {selectedCategory ? (
-            // Filtered view
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              key={selectedCategory}
+      {/* Menu / Products */}
+      <div ref={menuRef}>
+        {!hasProducts ? (
+          <CatalogEmptyState business={business} />
+        ) : (
+          <main className="container max-w-5xl mx-auto px-4 py-10 flex-1">
+            {/* Section title */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-6"
             >
-              {filteredProducts?.map((product) => (
-                <CatalogProductCard
-                  key={product.id}
-                  product={product}
-                  onClick={() => setSelectedProduct(product)}
-                  primaryColor={primaryColor}
-                />
-              ))}
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                {selectedCategory 
+                  ? categories?.find(c => c.id === selectedCategory)?.name || 'Produtos' 
+                  : '🍰 Nosso Menu'}
+              </h2>
+              <p className="text-muted-foreground text-sm mt-1">
+                {selectedCategory ? 'Produtos nesta categoria' : 'Todas as nossas delícias disponíveis para encomenda'}
+              </p>
             </motion.div>
-          ) : (
-            // Grouped by category view
-            <div className="space-y-10">
-              {Object.entries(groupedByCategory).map(([catId, { name, products: catProducts }], catIndex) => (
-                <motion.div 
-                  key={catId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: catIndex * 0.1 }}
-                >
-                  <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-3">
-                    <span 
-                      className="w-1 h-6 rounded-full"
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                    <span>{name}</span>
-                  </h2>
+
+            {selectedCategory ? (
+              <motion.div 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                key={selectedCategory}
+              >
+                {filteredProducts?.map((product) => (
+                  <CatalogProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={() => setSelectedProduct(product)}
+                    primaryColor={primaryColor}
+                  />
+                ))}
+              </motion.div>
+            ) : (
+              <div className="space-y-10">
+                {Object.entries(groupedByCategory).map(([catId, { name, products: catProducts }], catIndex) => (
                   <motion.div 
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="visible"
+                    key={catId}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: catIndex * 0.1 }}
                   >
-                    {catProducts.map((product) => (
-                      <CatalogProductCard
-                        key={product.id}
-                        product={product}
-                        onClick={() => setSelectedProduct(product)}
-                        primaryColor={primaryColor}
-                      />
-                    ))}
+                    <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-3">
+                      <span className="w-1 h-6 rounded-full" style={{ backgroundColor: primaryColor }} />
+                      <span>{name}</span>
+                    </h3>
+                    <motion.div 
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                      variants={staggerContainer}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                    >
+                      {catProducts.map((product) => (
+                        <CatalogProductCard
+                          key={product.id}
+                          product={product}
+                          onClick={() => setSelectedProduct(product)}
+                          primaryColor={primaryColor}
+                        />
+                      ))}
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              ))}
-              {uncategorizedProducts.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Object.keys(groupedByCategory).length * 0.1 }}
-                >
-                  <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-3">
-                    <span 
-                      className="w-1 h-6 rounded-full"
-                      style={{ backgroundColor: primaryColor }}
-                    />
-                    <span>Outros</span>
-                  </h2>
-                  <motion.div 
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="visible"
+                ))}
+                {uncategorizedProducts.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
                   >
-                    {uncategorizedProducts.map((product) => (
-                      <CatalogProductCard
-                        key={product.id}
-                        product={product}
-                        onClick={() => setSelectedProduct(product)}
-                        primaryColor={primaryColor}
-                      />
-                    ))}
+                    <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-3">
+                      <span className="w-1 h-6 rounded-full" style={{ backgroundColor: primaryColor }} />
+                      <span>Outros</span>
+                    </h3>
+                    <motion.div 
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                      variants={staggerContainer}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                    >
+                      {uncategorizedProducts.map((product) => (
+                        <CatalogProductCard
+                          key={product.id}
+                          product={product}
+                          onClick={() => setSelectedProduct(product)}
+                          primaryColor={primaryColor}
+                        />
+                      ))}
+                    </motion.div>
                   </motion.div>
-                </motion.div>
-              )}
-            </div>
-          )}
-        </main>
+                )}
+              </div>
+            )}
+          </main>
+        )}
+      </div>
+
+      {/* Photo Gallery */}
+      {hasProducts && products && (
+        <PhotoGallery products={products} primaryColor={primaryColor} />
       )}
+
+      {/* Customer Reviews */}
+      {reviews && reviews.length > 0 && (
+        <CustomerReviews reviews={reviews} primaryColor={primaryColor} />
+      )}
+
+      {/* About Section */}
+      <AboutSection business={business} primaryColor={primaryColor} />
 
       {/* Floating WhatsApp Button */}
       <AnimatePresence>
@@ -236,7 +263,7 @@ export default function PublicCatalogPage() {
         />
       </AnimatePresence>
 
-      {/* Product Detail Modal with Direct WhatsApp */}
+      {/* Product Detail Modal */}
       <ProductDetailModal
         product={selectedProduct}
         open={!!selectedProduct}
@@ -247,11 +274,7 @@ export default function PublicCatalogPage() {
       />
 
       {/* Footer */}
-      <footer className="container max-w-4xl mx-auto px-4 py-6 text-center mt-auto">
-        <p className="text-xs text-muted-foreground">
-          Powered by <span className="font-semibold" style={{ color: primaryColor }}>Agenda Smart</span>
-        </p>
-      </footer>
+      <CatalogFooter business={business} primaryColor={primaryColor} />
     </div>
   );
 }
