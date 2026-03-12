@@ -116,25 +116,25 @@
 
   /* Premium Dark Theme for Public Catalog */
   .theme-premium-dark {
-    --background: 225 25% 6%;
-    --foreground: 210 20% 95%;
+    --background: 270 20% 5%;
+    --foreground: 270 10% 95%;
 
-    --card: 225 20% 10%;
-    --card-foreground: 210 20% 95%;
+    --card: 270 18% 9%;
+    --card-foreground: 270 10% 95%;
 
-    --popover: 225 20% 10%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 270 18% 9%;
+    --popover-foreground: 270 10% 95%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 225 25% 6%;
+    --primary: 275 70% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 225 18% 14%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 270 15% 13%;
+    --secondary-foreground: 270 10% 95%;
 
-    --muted: 225 15% 18%;
-    --muted-foreground: 210 15% 55%;
+    --muted: 270 12% 16%;
+    --muted-foreground: 270 10% 55%;
 
-    --accent: 145 45% 42%;
+    --accent: 280 65% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 45%;
@@ -144,18 +144,18 @@
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 225 25% 6%;
+    --warning-foreground: 270 20% 6%;
 
-    --border: 225 15% 18%;
-    --input: 225 15% 18%;
-    --ring: 43 74% 49%;
+    --border: 270 12% 16%;
+    --input: 270 12% 16%;
+    --ring: 275 70% 55%;
 
     /* Premium shadows & glows */
-    --shadow-soft: 0 2px 8px -2px hsl(225 30% 3% / 0.5);
-    --shadow-medium: 0 8px 24px -6px hsl(225 30% 3% / 0.6);
-    --shadow-large: 0 16px 40px -12px hsl(225 30% 3% / 0.7);
-    --shadow-glow: 0 8px 32px -8px hsl(43 74% 49% / 0.25);
-    --shadow-glow-lg: 0 0 60px -12px hsl(43 74% 49% / 0.4);
+    --shadow-soft: 0 2px 8px -2px hsl(270 20% 3% / 0.5);
+    --shadow-medium: 0 8px 24px -6px hsl(270 20% 3% / 0.6);
+    --shadow-large: 0 16px 40px -12px hsl(270 20% 3% / 0.7);
+    --shadow-glow: 0 8px 32px -8px hsl(270 70% 55% / 0.25);
+    --shadow-glow-lg: 0 0 60px -12px hsl(270 70% 55% / 0.4);
   }
 }
 
