@@ -239,11 +239,11 @@
 
   /* Glow effects */
   .glow-gold {
-    box-shadow: 0 0 30px -5px hsl(43 74% 49% / 0.4);
+    box-shadow: 0 0 30px -5px hsl(270 70% 55% / 0.4);
   }
 
   .glow-gold-sm {
-    box-shadow: 0 0 15px -3px hsl(43 74% 49% / 0.3);
+    box-shadow: 0 0 15px -3px hsl(270 70% 55% / 0.3);
   }
 
   /* Shimmer animation */
