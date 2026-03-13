@@ -56,30 +56,52 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const { error: signUpError } = await signUp(formData.email, formData.password);
-      if (signUpError) throw signUpError;
+      // 1. Create auth user
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: { emailRedirectTo: window.location.origin },
+      });
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Erro ao criar usuário');
+      if (signUpError) {
+        console.error('SignUp error:', signUpError);
+        if (signUpError.message.includes('already registered')) {
+          throw new Error('Este email já está registado. Tente fazer login.');
+        }
+        throw new Error(signUpError.message || 'Não foi possível criar a conta. Verifique sua conexão ou tente novamente.');
+      }
 
+      const user = signUpData?.user;
+      if (!user) throw new Error('Não foi possível criar o utilizador. Tente novamente.');
+
+      // 2. Create business (trigger auto-creates user_role + subscription)
       const slug = generateSlug(formData.businessName);
       const { error: businessError } = await supabase
         .from('businesses')
         .insert({
           name: formData.businessName,
           slug: slug,
-          business_type: formData.businessType as 'lanchonete' | 'bolos' | 'buques' | 'restaurante' | 'outro',
+          business_type: formData.businessType as 'lanchonete' | 'bolos' | 'buques' | 'restaurante' | 'outro' | 'presente' | 'decoracao' | 'personalizado',
           whatsapp_number: formData.whatsapp,
           owner_id: user.id,
         });
 
-      if (businessError) throw businessError;
+      if (businessError) {
+        console.error('Business creation error:', businessError);
+        if (businessError.message.includes('duplicate key') || businessError.message.includes('unique')) {
+          throw new Error('Já existe um negócio com este nome. Escolha outro nome.');
+        }
+        throw new Error('Não foi possível registar o negócio. Tente novamente.');
+      }
 
-      toast({ title: 'Conta criada com sucesso!', description: 'Bem-vindo ao Encomendas. Seu negócio está pendente de aprovação.' });
+      toast({ title: 'Conta criada com sucesso!', description: 'Bem-vindo ao Pedido Certo. Seu negócio está pendente de aprovação.' });
       navigate('/aguardando-aprovacao');
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast({ title: 'Erro ao criar conta', description: error.message || 'Tente novamente mais tarde.', variant: 'destructive' });
+      const message = error.message?.includes('Failed to fetch')
+        ? 'Não foi possível conectar ao servidor. Verifique sua conexão à internet e tente novamente.'
+        : error.message || 'Não foi possível criar a conta. Tente novamente mais tarde.';
+      toast({ title: 'Erro ao criar conta', description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
