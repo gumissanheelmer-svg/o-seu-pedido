@@ -1,5 +1,4 @@
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   Package, 
@@ -7,18 +6,23 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X,
   Store,
   Users,
   XCircle,
   Wallet
 } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useBusiness } from '@/hooks/useBusiness';
 import { useImpersonate } from '@/hooks/useImpersonate';
 import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { useState } from 'react';
 
 const navItems = [
   { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
