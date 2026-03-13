@@ -61,27 +61,32 @@ const faqs = [
 
 const Pricing = () => {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0B0D12', color: '#FFFFFF' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#0b0f1a' }}>
       <Navbar />
 
       <main className="pt-28 pb-20">
         {/* Hero */}
-        <section className="container mx-auto px-4 text-center max-w-3xl mb-20">
+        <section className="container mx-auto px-4 text-center max-w-3xl mb-20 relative">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-[150px] opacity-15 pointer-events-none" style={{ backgroundColor: '#c44cff' }} />
           <motion.h1
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="text-4xl md:text-5xl font-bold leading-tight mb-6"
-            style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
+            className="text-4xl md:text-5xl font-bold leading-tight mb-6 relative z-10"
           >
-            Um investimento, resultados reais.
+            <span className="text-white">Um investimento, </span>
+            <span style={{
+              background: 'linear-gradient(135deg, #ff4d8d, #c44cff)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>resultados reais.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-lg md:text-xl max-w-2xl mx-auto"
-            style={{ color: '#B8C0D4', lineHeight: '1.7' }}
+            className="text-lg md:text-xl max-w-2xl mx-auto relative z-10"
+            style={{ color: '#94a3b8' }}
           >
             Tudo o que você precisa para profissionalizar seus pedidos num único plano acessível.
           </motion.p>
@@ -97,19 +102,18 @@ const Pricing = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 + idx * 0.15 }}
                 whileHover={{ y: -6 }}
-                className="relative p-8 md:p-10 overflow-hidden"
+                className="relative p-8 md:p-10 overflow-hidden rounded-[22px] border backdrop-blur-xl"
                 style={{
-                  backgroundColor: '#121827',
-                  borderRadius: '22px',
-                  border: plan.highlighted ? '1px solid rgba(255,122,26,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                  boxShadow: plan.highlighted ? '0 0 40px rgba(255,122,26,0.1)' : 'none',
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  borderColor: plan.highlighted ? 'rgba(196,76,255,0.4)' : 'rgba(255,255,255,0.08)',
+                  boxShadow: plan.highlighted ? '0 0 50px -10px rgba(196,76,255,0.2)' : 'none',
                 }}
               >
                 {plan.badge && (
                   <div className="absolute top-5 right-5">
                     <span
                       className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full"
-                      style={{ backgroundColor: 'rgba(255,122,26,0.15)', color: '#FF7A1A' }}
+                      style={{ background: 'linear-gradient(135deg, rgba(255,77,141,0.15), rgba(196,76,255,0.15))', color: '#c44cff' }}
                     >
                       {plan.badge}
                     </span>
@@ -117,14 +121,14 @@ const Pricing = () => {
                 )}
 
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-1" style={{ color: '#FFFFFF' }}>{plan.name}</h2>
-                  <p style={{ color: '#B8C0D4' }}>{plan.subtitle}</p>
+                  <h2 className="text-2xl font-bold mb-1 text-white">{plan.name}</h2>
+                  <p style={{ color: '#94a3b8' }}>{plan.subtitle}</p>
                 </div>
 
                 <div className="mb-8">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg" style={{ color: '#B8C0D4' }}>MZN</span>
-                    <span className="text-5xl font-extrabold" style={{ color: '#FFFFFF' }}>{plan.price}</span>
+                    <span className="text-lg" style={{ color: '#94a3b8' }}>MZN</span>
+                    <span className="text-5xl font-extrabold text-white">{plan.price}</span>
                   </div>
                 </div>
 
@@ -147,13 +151,12 @@ const Pricing = () => {
 
                 <Link to="/registar" className="block">
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: plan.highlighted ? '0 0 30px rgba(255,122,26,0.4)' : '0 0 20px rgba(255,255,255,0.1)' }}
+                    whileHover={{ scale: 1.02, boxShadow: plan.highlighted ? '0 0 35px rgba(196,76,255,0.4)' : '0 0 20px rgba(255,255,255,0.08)' }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full rounded-xl py-3 font-bold transition-all duration-300"
+                    className="w-full rounded-xl py-3 font-bold transition-all duration-300 text-white"
                     style={{
-                      background: plan.highlighted ? 'linear-gradient(135deg, #FF7A1A, #E06510)' : 'rgba(255,255,255,0.08)',
-                      color: '#FFFFFF',
-                      boxShadow: plan.highlighted ? '0 0 20px rgba(255,122,26,0.25)' : 'none',
+                      background: plan.highlighted ? 'linear-gradient(90deg, #ff4d8d, #c44cff)' : 'rgba(255,255,255,0.08)',
+                      boxShadow: plan.highlighted ? '0 0 25px rgba(196,76,255,0.25)' : 'none',
                     }}
                   >
                     Começar agora
@@ -166,12 +169,11 @@ const Pricing = () => {
         </section>
 
         {/* Social Proof */}
-        <section className="py-20" style={{ backgroundColor: '#0F1118' }}>
+        <section className="py-20" style={{ background: 'linear-gradient(180deg, #0b0f1a 0%, #121826 100%)' }}>
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.h2
               initial="hidden" whileInView="visible" viewport={{ once: true }} custom={0} variants={fadeUp}
-              className="text-3xl font-bold text-center mb-14"
-              style={{ color: '#FFFFFF' }}
+              className="text-3xl font-bold text-center mb-14 text-white"
             >
               Pequenos negócios já estão usando
             </motion.h2>
@@ -179,15 +181,15 @@ const Pricing = () => {
               {testimonials.map((t, i) => (
                 <motion.div
                   key={i} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-30px' }} custom={i + 1} variants={fadeUp}
-                  className="p-8"
-                  style={{ backgroundColor: '#121827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '22px' }}
+                  className="p-8 rounded-[22px] border backdrop-blur-xl"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
                 >
                   <div className="flex gap-0.5 mb-4">
                     {Array.from({ length: 5 }).map((_, s) => (
                       <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="italic mb-4" style={{ color: '#B8C0D4', lineHeight: '1.65' }}>"{t.text}"</p>
+                  <p className="italic mb-4" style={{ color: '#94a3b8', lineHeight: '1.65' }}>"{t.text}"</p>
                   <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>— {t.role}</span>
                 </motion.div>
               ))}
@@ -196,12 +198,11 @@ const Pricing = () => {
         </section>
 
         {/* FAQ */}
-        <section className="py-20" style={{ backgroundColor: '#0B0D12' }}>
+        <section className="py-20" style={{ background: '#0b0f1a' }}>
           <div className="container mx-auto px-4 max-w-2xl">
             <motion.h2
               initial="hidden" whileInView="visible" viewport={{ once: true }} custom={0} variants={fadeUp}
-              className="text-3xl font-bold text-center mb-12"
-              style={{ color: '#FFFFFF' }}
+              className="text-3xl font-bold text-center mb-12 text-white"
             >
               Perguntas Frequentes
             </motion.h2>
@@ -209,11 +210,11 @@ const Pricing = () => {
               {faqs.map((f, i) => (
                 <motion.div
                   key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i + 1} variants={fadeUp}
-                  className="p-6"
-                  style={{ backgroundColor: '#121827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px' }}
+                  className="p-6 rounded-2xl border backdrop-blur-xl"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)' }}
                 >
-                  <h4 className="font-semibold mb-2" style={{ color: '#FFFFFF' }}>{f.q}</h4>
-                  <p style={{ color: '#B8C0D4', lineHeight: '1.6' }}>{f.a}</p>
+                  <h4 className="font-semibold mb-2 text-white">{f.q}</h4>
+                  <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>{f.a}</p>
                 </motion.div>
               ))}
             </div>
