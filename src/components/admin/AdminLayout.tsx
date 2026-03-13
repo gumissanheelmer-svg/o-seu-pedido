@@ -77,7 +77,7 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background">
       {/* Impersonate Banner */}
       {isImpersonating && (
         <div className="bg-warning text-warning-foreground px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2">
