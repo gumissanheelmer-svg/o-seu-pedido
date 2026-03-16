@@ -344,6 +344,67 @@ export default function Settings() {
             </Card>
           </motion.div>
         </TabsContent>
+
+        {/* Order Rules Settings */}
+        <TabsContent value="rules">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                  Regras de Encomenda
+                </CardTitle>
+                <CardDescription>
+                  Defina as regras de pagamento, cancelamento e entrega que serão mostradas aos clientes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="orderRulesMessage">Observações / Regras</Label>
+                  <Textarea
+                    id="orderRulesMessage"
+                    value={orderRulesMessage}
+                    onChange={(e) => setOrderRulesMessage(e.target.value)}
+                    placeholder="Exemplo: Trabalhamos com 50% de entrada no acto da encomenda e o restante na entrega. Em caso de desistência 24h antes não há devolução."
+                    rows={6}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Este texto aparecerá na página de cada produto e como confirmação antes do pedido via WhatsApp.
+                    Deixe vazio para não exibir regras.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    setIsSaving(true);
+                    try {
+                      await updateBusiness.mutateAsync({
+                        order_rules_message: orderRulesMessage || null,
+                      });
+                      toast.success('Regras de encomenda salvas!');
+                    } catch (error) {
+                      toast.error('Erro ao salvar regras');
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="w-full"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Salvar Regras
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
       </Tabs>
     </div>
   );
