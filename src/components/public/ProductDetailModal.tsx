@@ -55,6 +55,8 @@ function generateWhatsAppMessage(
   photoCount: number,
   videoCount: number
 ): string {
+  const hasRules = arguments.length > 7 && arguments[7];
+
   const lines = [
     `Olá! 👋`,
     ``,
