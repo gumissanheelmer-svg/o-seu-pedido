@@ -32,6 +32,7 @@ export interface Business {
   payment_required: boolean;
   signal_amount: number | null;
   confirmation_message: string | null;
+  order_rules_message: string | null;
 }
 
 export interface Product {

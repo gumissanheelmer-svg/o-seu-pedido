@@ -150,6 +150,7 @@ export type Database = {
           logo_url: string | null
           mpesa_number: string | null
           name: string
+          order_rules_message: string | null
           owner_id: string
           payment_required: boolean
           primary_color: string | null
@@ -175,6 +176,7 @@ export type Database = {
           logo_url?: string | null
           mpesa_number?: string | null
           name: string
+          order_rules_message?: string | null
           owner_id: string
           payment_required?: boolean
           primary_color?: string | null
@@ -200,6 +202,7 @@ export type Database = {
           logo_url?: string | null
           mpesa_number?: string | null
           name?: string
+          order_rules_message?: string | null
           owner_id?: string
           payment_required?: boolean
           primary_color?: string | null

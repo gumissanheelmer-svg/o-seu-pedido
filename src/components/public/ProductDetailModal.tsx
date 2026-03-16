@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, ChevronLeft, ChevronRight, Play, MessageCircle, Check, Paperclip } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,6 +28,7 @@ interface ProductDetailModalProps {
   businessName: string;
   whatsappNumber: string;
   primaryColor?: string;
+  orderRulesMessage?: string | null;
 }
 
 const MAX_DESCRIPTION = 5000;
@@ -52,7 +54,8 @@ function generateWhatsAppMessage(
   businessName: string,
   unitPrice: number,
   photoCount: number,
-  videoCount: number
+  videoCount: number,
+  hasRules: boolean
 ): string {
   const lines = [
     `Olá! 👋`,
@@ -76,6 +79,10 @@ function generateWhatsAppMessage(
     lines.push(``, `📎 *Anexos:* ${attachments.join(' e ')} de referência (enviarei a seguir nesta conversa)`);
   }
 
+  if (hasRules) {
+    lines.push(``, `✅ Confirmo que li e aceito as regras de encomenda.`);
+  }
+
   lines.push(``, `Aguardo confirmação. Obrigado! 🙏`);
   return lines.join('\n');
 }
@@ -87,6 +94,7 @@ export function ProductDetailModal({
   businessName,
   whatsappNumber,
   primaryColor = '#C9A24D',
+  orderRulesMessage,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [description, setDescription] = useState('');
@@ -95,6 +103,9 @@ export function ProductDetailModal({
   const [photos, setPhotos] = useState<MediaFile[]>([]);
   const [videos, setVideos] = useState<MediaFile[]>([]);
   const [showAttachHint, setShowAttachHint] = useState(false);
+  const [showRulesConfirmation, setShowRulesConfirmation] = useState(false);
+
+  const hasRules = !!orderRulesMessage?.trim();
 
   if (!product) return null;
 
@@ -115,12 +126,13 @@ export function ProductDetailModal({
     setPhotos([]);
     setVideos([]);
     setShowAttachHint(false);
+    setShowRulesConfirmation(false);
     onClose();
   };
 
-  const handleWhatsAppOrder = () => {
-    if (isOverLimit) return;
+  const proceedToWhatsApp = () => {
     setIsOrdering(true);
+    setShowRulesConfirmation(false);
 
     const message = generateWhatsAppMessage(
       product.name,
@@ -129,7 +141,8 @@ export function ProductDetailModal({
       businessName,
       product.price,
       photos.length,
-      videos.length
+      videos.length,
+      hasRules
     );
 
     let phone = whatsappNumber.replace(/\D/g, '');
@@ -146,6 +159,15 @@ export function ProductDetailModal({
         handleClose();
       }
     }, 600);
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (isOverLimit) return;
+    if (hasRules) {
+      setShowRulesConfirmation(true);
+    } else {
+      proceedToWhatsApp();
+    }
   };
 
   const navigateMedia = (direction: 'prev' | 'next') => {
@@ -227,6 +249,16 @@ export function ProductDetailModal({
             <p className="text-2xl font-bold mt-3" style={{ color: primaryColor }}>
               {formatCurrency(product.price)}
             </p>
+
+            {/* Order Rules / OBS */}
+            {hasRules && (
+              <div className="mt-4 p-4 rounded-xl border border-amber-400/20 bg-amber-400/5">
+                <h4 className="text-sm font-bold mb-2" style={{ color: '#FFC107' }}>📋 OBSERVAÇÕES</h4>
+                <p className="text-xs whitespace-pre-line" style={{ color: '#E0E0E0', lineHeight: '1.7' }}>
+                  {orderRulesMessage}
+                </p>
+              </div>
+            )}
 
             <Separator className="my-4 bg-white/10" />
 
@@ -377,6 +409,45 @@ export function ProductDetailModal({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {/* Rules Confirmation Modal */}
+      <AlertDialog open={showRulesConfirmation} onOpenChange={setShowRulesConfirmation}>
+        <AlertDialogContent className="max-w-md glass-strong border-white/10">
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold text-foreground">
+              📋 Confirmação de Encomenda
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Antes de continuar, leia as regras da encomenda:
+            </p>
+            <div className="p-4 rounded-xl border border-amber-400/20 bg-amber-400/5 max-h-[200px] overflow-y-auto">
+              <p className="text-sm whitespace-pre-line" style={{ color: '#E0E0E0', lineHeight: '1.7' }}>
+                {orderRulesMessage}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <motion.button
+                className="flex-1 h-11 rounded-xl border border-white/10 bg-white/5 text-sm font-medium text-foreground"
+                onClick={() => setShowRulesConfirmation(false)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                className="flex-1 h-11 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#25D366' }}
+                onClick={proceedToWhatsApp}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <MessageCircle className="w-4 h-4" fill="white" />
+                Continuar para WhatsApp
+              </motion.button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
