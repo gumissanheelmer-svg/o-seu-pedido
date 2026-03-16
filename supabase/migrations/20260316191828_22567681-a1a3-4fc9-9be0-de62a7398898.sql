@@ -1,0 +1,1 @@
+ALTER TABLE public.businesses ADD COLUMN order_rules_message text DEFAULT NULL;
