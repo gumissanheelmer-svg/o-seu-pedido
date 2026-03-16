@@ -27,6 +27,8 @@ export default function Settings() {
 
   // Payment settings
   const [paymentRequired, setPaymentRequired] = useState(false);
+  // Order rules
+  const [orderRulesMessage, setOrderRulesMessage] = useState('');
   const [mpesaNumber, setMpesaNumber] = useState('');
   const [emolaNumber, setEmolaNumber] = useState('');
   const [signalAmount, setSignalAmount] = useState('');
