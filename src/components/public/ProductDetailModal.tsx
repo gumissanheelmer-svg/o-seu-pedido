@@ -411,14 +411,12 @@ export function ProductDetailModal({
       </DialogContent>
 
       {/* Rules Confirmation Modal */}
-      <Dialog open={showRulesConfirmation} onOpenChange={setShowRulesConfirmation}>
-        <DialogContent className="max-w-md glass-strong border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-foreground">
-              📋 Confirmação de Encomenda
-            </DialogTitle>
-          </DialogHeader>
+      <AlertDialog open={showRulesConfirmation} onOpenChange={setShowRulesConfirmation}>
+        <AlertDialogContent className="max-w-md glass-strong border-white/10">
           <div className="space-y-4">
+            <h3 className="text-lg font-bold text-foreground">
+              📋 Confirmação de Encomenda
+            </h3>
             <p className="text-sm text-muted-foreground">
               Antes de continuar, leia as regras da encomenda:
             </p>
@@ -448,8 +446,8 @@ export function ProductDetailModal({
               </motion.button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
