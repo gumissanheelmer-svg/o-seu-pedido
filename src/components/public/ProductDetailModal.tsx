@@ -53,10 +53,9 @@ function generateWhatsAppMessage(
   businessName: string,
   unitPrice: number,
   photoCount: number,
-  videoCount: number
+  videoCount: number,
+  hasRules: boolean
 ): string {
-  const hasRules = arguments.length > 7 && arguments[7];
-
   const lines = [
     `Olá! 👋`,
     ``,
@@ -77,6 +76,10 @@ function generateWhatsAppMessage(
   if (videoCount > 0) attachments.push(`${videoCount} vídeo${videoCount > 1 ? 's' : ''}`);
   if (attachments.length > 0) {
     lines.push(``, `📎 *Anexos:* ${attachments.join(' e ')} de referência (enviarei a seguir nesta conversa)`);
+  }
+
+  if (hasRules) {
+    lines.push(``, `✅ Confirmo que li e aceito as regras de encomenda.`);
   }
 
   lines.push(``, `Aguardo confirmação. Obrigado! 🙏`);
