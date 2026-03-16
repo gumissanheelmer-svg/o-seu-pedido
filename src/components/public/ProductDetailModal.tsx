@@ -27,6 +27,7 @@ interface ProductDetailModalProps {
   businessName: string;
   whatsappNumber: string;
   primaryColor?: string;
+  orderRulesMessage?: string | null;
 }
 
 const MAX_DESCRIPTION = 5000;
