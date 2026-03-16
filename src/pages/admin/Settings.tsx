@@ -43,6 +43,7 @@ export default function Settings() {
       setWhatsappNumber(business.whatsapp_number || '');
       setAddress(business.address || '');
       setPaymentRequired(business.payment_required || false);
+      setOrderRulesMessage(business.order_rules_message || '');
       setMpesaNumber(business.mpesa_number || '');
       setEmolaNumber(business.emola_number || '');
       setSignalAmount(business.signal_amount?.toString() || '');
