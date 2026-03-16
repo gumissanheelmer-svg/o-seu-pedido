@@ -113,7 +113,7 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="identity" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="identity" className="flex items-center gap-2">
             <Palette className="w-4 h-4" />
             Identidade
@@ -125,6 +125,10 @@ export default function Settings() {
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="w-4 h-4" />
             Pagamento
+          </TabsTrigger>
+          <TabsTrigger value="rules" className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Regras
           </TabsTrigger>
         </TabsList>
 
