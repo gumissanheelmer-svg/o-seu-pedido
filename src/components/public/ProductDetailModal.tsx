@@ -93,6 +93,7 @@ export function ProductDetailModal({
   businessName,
   whatsappNumber,
   primaryColor = '#C9A24D',
+  orderRulesMessage,
 }: ProductDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [description, setDescription] = useState('');
@@ -101,6 +102,9 @@ export function ProductDetailModal({
   const [photos, setPhotos] = useState<MediaFile[]>([]);
   const [videos, setVideos] = useState<MediaFile[]>([]);
   const [showAttachHint, setShowAttachHint] = useState(false);
+  const [showRulesConfirmation, setShowRulesConfirmation] = useState(false);
+
+  const hasRules = !!orderRulesMessage?.trim();
 
   if (!product) return null;
 
@@ -121,12 +125,13 @@ export function ProductDetailModal({
     setPhotos([]);
     setVideos([]);
     setShowAttachHint(false);
+    setShowRulesConfirmation(false);
     onClose();
   };
 
-  const handleWhatsAppOrder = () => {
-    if (isOverLimit) return;
+  const proceedToWhatsApp = () => {
     setIsOrdering(true);
+    setShowRulesConfirmation(false);
 
     const message = generateWhatsAppMessage(
       product.name,
@@ -135,7 +140,8 @@ export function ProductDetailModal({
       businessName,
       product.price,
       photos.length,
-      videos.length
+      videos.length,
+      hasRules
     );
 
     let phone = whatsappNumber.replace(/\D/g, '');
@@ -152,6 +158,15 @@ export function ProductDetailModal({
         handleClose();
       }
     }, 600);
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (isOverLimit) return;
+    if (hasRules) {
+      setShowRulesConfirmation(true);
+    } else {
+      proceedToWhatsApp();
+    }
   };
 
   const navigateMedia = (direction: 'prev' | 'next') => {
