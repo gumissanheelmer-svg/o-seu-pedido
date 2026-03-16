@@ -271,6 +271,7 @@ export default function PublicCatalogPage() {
         businessName={business.name}
         whatsappNumber={business.whatsapp_number}
         primaryColor={primaryColor}
+        orderRulesMessage={business.order_rules_message}
       />
 
       {/* Footer */}

@@ -408,6 +408,47 @@ export function ProductDetailModal({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      {/* Rules Confirmation Modal */}
+      <Dialog open={showRulesConfirmation} onOpenChange={setShowRulesConfirmation}>
+        <DialogContent className="max-w-md glass-strong border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-foreground">
+              📋 Confirmação de Encomenda
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Antes de continuar, leia as regras da encomenda:
+            </p>
+            <div className="p-4 rounded-xl border border-amber-400/20 bg-amber-400/5 max-h-[200px] overflow-y-auto">
+              <p className="text-sm whitespace-pre-line" style={{ color: '#E0E0E0', lineHeight: '1.7' }}>
+                {orderRulesMessage}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <motion.button
+                className="flex-1 h-11 rounded-xl border border-white/10 bg-white/5 text-sm font-medium text-foreground"
+                onClick={() => setShowRulesConfirmation(false)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                className="flex-1 h-11 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#25D366' }}
+                onClick={proceedToWhatsApp}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <MessageCircle className="w-4 h-4" fill="white" />
+                Continuar para WhatsApp
+              </motion.button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
