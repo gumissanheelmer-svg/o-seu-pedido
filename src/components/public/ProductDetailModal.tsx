@@ -249,6 +249,16 @@ export function ProductDetailModal({
               {formatCurrency(product.price)}
             </p>
 
+            {/* Order Rules / OBS */}
+            {hasRules && (
+              <div className="mt-4 p-4 rounded-xl border border-amber-400/20 bg-amber-400/5">
+                <h4 className="text-sm font-bold mb-2" style={{ color: '#FFC107' }}>📋 OBSERVAÇÕES</h4>
+                <p className="text-xs whitespace-pre-line" style={{ color: '#E0E0E0', lineHeight: '1.7' }}>
+                  {orderRulesMessage}
+                </p>
+              </div>
+            )}
+
             <Separator className="my-4 bg-white/10" />
 
             {/* Quantity */}
